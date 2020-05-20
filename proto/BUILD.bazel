@@ -1,0 +1,47 @@
+load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+
+proto_library(
+    name = "service_function_proto",
+    srcs = ["usps_api/service_function.proto"],
+)
+
+proto_library(
+    name = "ghost_label_proto",
+    srcs = ["usps_api/ghost_label.proto"],
+)
+
+proto_library(
+    name = "sfc_filter_proto",
+    srcs = ["usps_api/sfc_filter.proto"],
+    deps = [
+        ":ghost_label_proto",
+    ],
+)
+
+proto_library(
+    name = "sfc_timestamp_proto",
+    srcs = ["usps_api/sfc_timestamp.proto"],
+)
+
+proto_library(
+    name = "sfc_proto",
+    srcs = ["usps_api/sfc.proto"],
+    deps = [
+        ":service_function_proto",
+        ":sfc_filter_proto",
+        ":sfc_timestamp_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "sfc_cc_proto",
+    deps = [":sfc_proto"],
+)
+
+cc_grpc_library(
+    name = "sfc_cc_grpc_proto",
+    srcs = [":sfc_proto"],
+    generate_mocks = True,
+    grpc_only = True,
+    deps = [":sfc_cc_proto"],
+)

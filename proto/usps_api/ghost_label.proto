@@ -1,0 +1,34 @@
+// Copyright 2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License. You may obtain a copy of
+// the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations under
+// the License.
+syntax = "proto2";
+
+package ghost;
+
+option cc_enable_arenas = true;
+
+message GhostLabelPrefix {
+  // Required.
+  optional uint64 value = 1;
+
+  // Required.
+  // Upper |prefix_len| bits of the 48-bits of |value| to be used as the prefix.
+  // Value must be between 1 to 48, inclusively.
+  optional uint32 prefix_len = 2;
+}
+
+// Represents a 48 bit Ghost label.
+message GhostLabel {
+  // Required.
+  optional uint64 value = 1;
+}

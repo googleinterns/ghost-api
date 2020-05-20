@@ -1,0 +1,84 @@
+// Copyright 2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License. You may obtain a copy of
+// the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations under
+// the License.
+syntax = "proto2";
+import "usps_api/ghost_label.proto";
+
+package ghost;
+
+option cc_enable_arenas = true;
+
+message GhostTunnelIdentifier {
+  // Required.
+  // Label identifying a Ghost terminal.
+  optional GhostLabel terminal_label = 1;
+
+  // Required.
+  // Label identifying a packet processing service.
+  optional GhostLabel service_label = 2;
+
+  // Required.
+  // Traffic direction of the tunnel.
+  enum Direction {
+    UNSPECIFIED = 0;
+    // Traffic flows from a Ghost terminal to a packet processing service.
+    UPLINK = 1;
+    // Traffic flows from a packet processing service to a Ghost terminal.
+    DOWNLINK = 2;
+  }
+  optional Direction direction = 3;
+}
+
+message GhostRoutingIdentifier {
+  // Required.
+  // Identifying destination to route packets to.
+  optional GhostLabelPrefix destination_label_prefix = 1;
+}
+
+// A message that describes the packet filter (match criteria) for Ghost.
+message GhostFilter {
+  // Required.
+  oneof resource_identifier {
+    // Identifying a unique tunnel for encryption/decryption.
+    GhostTunnelIdentifier tunnel_id = 1;
+
+    // Identifying destination(s) to forward traffic to.
+    GhostRoutingIdentifier routing_id = 2;
+  }
+
+  // Optional.
+  // Whether packets are for handshake. Filter on the HM-bit.
+  optional bool handshake_packets = 3;
+}
+
+// Filters to be applied at different layers of the traffic.
+message FilterLayer {
+  // Required.
+  oneof layer7 {
+    GhostFilter ghost_filter = 1;
+  }
+}
+
+// Filter to classify service function chains.
+message SfcFilter {
+  // Required.
+  // Traffic direction of the tunnel. Filters to be applied at different layers
+  // of the stack. The traffic is considered a match when all the
+  // |filter_layers| are matched. In other words, an AND semantic is used when
+  // multiple |filter_layers| are specified.
+  //
+  // In each layer, a single protocol filter is allowed to be specified. If
+  // multiple protocols of a same layer need to be supported, the caller should
+  // create separate SFCs for them.
+  repeated FilterLayer filter_layers = 1;
+}

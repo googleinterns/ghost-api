@@ -1,0 +1,143 @@
+// Copyright 2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License. You may obtain a copy of
+// the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations under
+// the License.
+syntax = "proto2";
+import "usps_api/service_function.proto";
+import "usps_api/sfc_filter.proto";
+import "usps_api/sfc_timestamp.proto";
+
+package ghost;
+
+option cc_enable_arenas = true;
+
+message CreateSfcRequest {
+  // Required.
+  // Match criteria to create service functions for.
+  optional SfcFilter sfc_filter = 1;
+
+  // Required.
+  // Service Function(s) to be applied for the SFC.
+  repeated ServiceFn service_functions_to_install = 2;
+
+  // Optional.
+  // If set, the request will be activated at the specified time instead of
+  // immediately. In addition, the response will indicate if the request is
+  // received but will not indicate if the request will be successfully
+  // processed.
+  optional GpsEpochTimestamp activation_time = 3;
+
+  // Optional.
+  // If set, the rule created will automatically be deleted at the expiration
+  // time. If both activation and expiration times are set, the expiration time
+  // must be greater than the activation time.
+  optional GpsEpochTimestamp expiration_time = 5;
+}
+
+message CreateSfcResponse {
+  // Empty.
+  // Programming result is indicated in RPC status.
+}
+
+message DeleteSfcRequest {
+  // Required.
+  // Filter to identify service functions to delete.
+  optional SfcFilter sfc_filter = 1;
+
+  // Optional.
+  // If set, the request will be activated at the specified time instead of
+  // immediately. In addition, the response will indicate if the request is
+  // received but will not indicate if the request will be successfully
+  // processed.
+  optional GpsEpochTimestamp activation_time = 2;
+
+  // Optional.
+  // If set, the scheduled request with the matching filter and activation
+  // timestamp will be deleted. Otherwise, the existing SFC with a matching
+  // filter will be deleted.
+  optional GpsEpochTimestamp timestamp_to_deactivate = 3;
+}
+
+message DeleteSfcResponse {
+  // Empty.
+  // Programming result is indicated in RPC status.
+}
+
+message QueryRequest {
+  // Optional.
+  // Filter to identify service functions to query. If set, the response will
+  // include the SFC identified by the filter. Otherwise, all SFCs will be
+  // returned in the response.
+  optional SfcFilter sfc_filter = 1;
+
+  // Optional.
+  // If set to true, then the response will include all the scheduled requests
+  // to be activated in the future.
+  optional bool include_future_instructions = 2 [default = false];
+
+  // Optional.
+  // This field only takes effect when |sfc_filter| is set. If the field is set
+  // to true, then the response will include values of all counters in the
+  // service functions.
+  optional bool include_counter_values = 3 [default = false];
+}
+
+message ScheduledRequest {
+  // Required.
+  oneof scheduled_request {
+    CreateSfcRequest create_request = 1;
+    DeleteSfcRequest delete_request = 2;
+  }
+}
+
+message Sfc {
+  // Required.
+  // Match criteria of the SFC.
+  optional SfcFilter sfc_filter = 1;
+
+  // Required.
+  // Service Function(s) of the SFC.
+  repeated ServiceFn service_functions = 2;
+
+  // Optional.
+  // Packet counter values of the SFC. Will be populated only if
+  // |include_counter_values| in the request is set to |true|.
+  repeated uint64 counter_values = 3;
+
+  // Optional.
+  // Expiration time of the SFC.
+  optional GpsEpochTimestamp expiration_time = 4;
+}
+
+message QueryResponse {
+  // Optional.
+  // If |include_scheduled_requests| is set in the request, this field will
+  // include all the scheduled requests to be activated in the future.
+  repeated ScheduledRequest scheduled_requests = 2;
+
+  // Optional.
+  // Currently installed SFCs. The SFCs were installed when previous
+  // CreateSfcRequests are processed by the API server.
+  repeated Sfc installed_sfcs = 3;
+}
+
+// A service to program Marconi's service function chains (SFCs).
+service SfcService {
+  // RPC for creating a SFC.
+  rpc CreateSfc(CreateSfcRequest) returns (CreateSfcResponse) {}
+
+  // RPC for deleting an existing SFC.
+  rpc DeleteSfc(DeleteSfcRequest) returns (DeleteSfcResponse) {}
+
+  // RPC for querying an SFC.
+  rpc Query(QueryRequest) returns (QueryResponse) {}
+}
