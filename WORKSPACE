@@ -1,5 +1,5 @@
-##### Protobuf Rules for Bazel
-##### See https://github.com/bazelbuild/rules_proto
+# Protobuf Rules for Bazel
+# See https://github.com/bazelbuild/rules_proto
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
@@ -15,8 +15,8 @@ load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_
 rules_proto_dependencies()
 rules_proto_toolchains()
 
-##### gRPC Rules for Bazel
-##### See https://github.com/grpc/grpc/blob/master/src/cpp/README.md#make
+# gRPC Rules for Bazel
+# See https://github.com/grpc/grpc/blob/master/src/cpp/README.md#make
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
