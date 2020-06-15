@@ -1,3 +1,16 @@
+// Copyright 2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not
+// use this file except in compliance with the License. You may obtain a copy of
+// the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations under
+// the License.
 #include <string>
 #include <iostream>
 
@@ -6,38 +19,58 @@
 #include <grpcpp/server_builder.h>
 #include <grpcpp/server_context.h>
 #include <grpcpp/security/server_credentials.h>
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
 
-/* https://grpc.io/docs/languages/cpp/basics/
- * Runs server using server builder
- */ 
-void RunServer(std::string host, std::string port) {
-  std::string server_address = host + ":" + port;
-  std::cout << "Server attempting to listen on " << server_address << std::endl;
-  grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  std::unique_ptr<grpc::Server> server = builder.BuildAndStart();
-  // TODO(Sam) must register service here or else won't be polled
-  if(server!=nullptr){
+ABSL_FLAG(std::string, HOST, "0.0.0.0", "The host of the ip to listen on");
+// port will be within range due to flag definition
+ABSL_FLAG(std::uint16_t, PORT, 0, "The port of the ip to listen on");
+
+namespace servercore {
+  // Runs server using server builder
+  // see https://grpc.io/docs/languages/cpp/basics/
+  // TODO(sam) use absl:status as return type
+  void Run(std::string host, uint16_t port) {
+    std::string server_address = host + ":" + std::to_string(port);
+    std::cout << "Server attempting to listen on " << server_address << std::endl;
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    std::unique_ptr<grpc::Server> server = builder.BuildAndStart();
+    // TODO(Sam) must register service here or else won't be polled
+    if (server == nullptr) {
+      std::cout << "Server could not listen on " << server_address << std::endl;
+      return;
+    }
     std::cout << "Server listening on " << server_address << std::endl;
     server->Wait();
-  } else {
-    std::cout << "Server could not listen on " << server_address << std::endl;
+  }
+
+  // verifies a valid IPV4 address in the form A.B.C.D
+  // port is already valid due to flag parser
+  bool IsValidAddress(std::string host) {
+    int A, B, C, D;
+    // temp variable to catch longer input ip address
+    char terms [1];
+    int matched = sscanf(host.c_str(), "%d.%d.%d.%d%s", &A, &B, &C, &D, terms);
+    if (matched != 4) {
+      return false;
+    } else if (A < 0 || B < 0 || C < 0 || D < 0) {
+      return false;
+    } else if (A > 255 || B > 255 || C > 255 || D > 255) {
+      return false;
+    }
+    return true;
   }
 }
 
-/*
- * main takes in host & port and runs a server
- * argv[1]: host
- * argv[2]: port
- */ 
+// using abseil flags to parse host & port at runtime
+// see https://abseil.io/docs/cpp/guides/flags
 int main(int argc, char *argv[]) {
-  if(argc!=3){
-    std::cout << "Usage: ./run-server <host> <port>" << std::endl;
-    return 1;
+  absl::ParseCommandLine(argc, argv);
+  if (servercore::IsValidAddress(absl::GetFlag(FLAGS_HOST))) {
+    servercore::Run(absl::GetFlag(FLAGS_HOST), absl::GetFlag(FLAGS_PORT));
   } else {
-    std::string host = argv[1];
-    std::string port = argv[2];
-    RunServer(host, port);
-    return 0;
+    std::cout << "Invalid host or port" << std::endl;
   }
+  return 0;
 }
