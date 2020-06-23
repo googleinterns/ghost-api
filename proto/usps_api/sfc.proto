@@ -12,9 +12,9 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 syntax = "proto2";
-import "usps_api/service_function.proto";
-import "usps_api/sfc_filter.proto";
-import "usps_api/sfc_timestamp.proto";
+import "proto/usps_api/service_function.proto";
+import "proto/usps_api/sfc_filter.proto";
+import "proto/usps_api/sfc_timestamp.proto";
 
 package ghost;
 
