@@ -23,7 +23,7 @@
 #include "absl/flags/parse.h"
 #include "proto/usps_api/sfc.grpc.pb.h"
 
-ABSL_FLAG(std::string, HOST, "0.0.0.0", "The host of the ip to listen on");
+ABSL_FLAG(std::string, HOST, "localhost", "The host of the ip to listen on");
 // port will be within range due to flag definition
 ABSL_FLAG(std::uint16_t, PORT, 0, "The port of the ip to listen on");
 
@@ -67,9 +67,12 @@ namespace servercore {
     server->Wait();
   }
 
-  // verifies a valid IPV4 address in the form A.B.C.D
+  // verifies a valid IPV4 address in the form A.B.C.D or localhost
   // port is already valid due to flag parser
   bool IsValidAddress(std::string host) {
+    if (host.compare("localhost") == 0) {
+      return true;
+    }
     int A, B, C, D;
     // temp variable to catch longer input ip address
     char terms [1];
