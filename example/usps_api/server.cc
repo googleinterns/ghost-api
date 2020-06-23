@@ -21,10 +21,31 @@
 #include <grpcpp/security/server_credentials.h>
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "proto/usps_api/sfc.grpc.pb.h"
 
 ABSL_FLAG(std::string, HOST, "0.0.0.0", "The host of the ip to listen on");
 // port will be within range due to flag definition
 ABSL_FLAG(std::uint16_t, PORT, 0, "The port of the ip to listen on");
+
+// implementation of 3 rpc functions
+class GhostImpl final : public ghost::SfcService::Service {
+  public:
+    grpc::Status CreateSfc(grpc::ServerContext* context,
+                     const ghost::CreateSfcRequest* request,
+                     ghost::CreateSfcResponse* response) override {
+      return grpc::Status::OK;
+    }
+    grpc::Status DeleteSfc(grpc::ServerContext* context,
+                           const ghost::DeleteSfcRequest* request,
+                           ghost::DeleteSfcResponse* response) override {
+      return grpc::Status::OK;
+    }
+    grpc::Status Query(grpc::ServerContext* context,
+                       const ghost::QueryRequest* request,
+                       ghost::QueryResponse* response) override {
+      return grpc::Status::OK;
+    }
+};
 
 namespace servercore {
   // Runs server using server builder
@@ -34,9 +55,10 @@ namespace servercore {
     std::string server_address = host + ":" + std::to_string(port);
     std::cout << "Server attempting to listen on " << server_address << std::endl;
     grpc::ServerBuilder builder;
+    GhostImpl service;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    builder.RegisterService(&service);
     std::unique_ptr<grpc::Server> server = builder.BuildAndStart();
-    // TODO(Sam) must register service here or else won't be polled
     if (server == nullptr) {
       std::cout << "Server could not listen on " << server_address << std::endl;
       return;
