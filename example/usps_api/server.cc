@@ -51,7 +51,7 @@ class GhostImpl final : public ghost::SfcService::Service {
 namespace servercore {
   // Runs server using server builder
   // see https://grpc.io/docs/languages/cpp/basics/
-  // TODO(sam) use absl:status as return type
+  // TODO(sam) use absl:status as return type & config behavior functionality
   void Run(std::string host, uint16_t port) {
     std::string server_address = host + ":" + std::to_string(port);
     std::cout << "Server attempting to listen on " << server_address << std::endl;
