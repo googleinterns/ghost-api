@@ -40,3 +40,14 @@ http_archive(
   strip_prefix = "abseil-cpp-c512f118dde6ffd51cb7d8ac8804bbaf4d266c3a",
   sha256 = "8400c511d64eb4d26f92c5ec72535ebd0f843067515244e8b50817b0786427f9",
 )
+
+# jsoncpp dependency
+# See https://github.com/open-source-parsers/jsoncpp
+http_archive(
+  name = "com_github_open_source_parsers_jsoncpp",
+  build_file = "//example/third-party:BUILD.jsoncpp",
+  sha256 =
+      "c49deac9e0933bcb7044f08516861a2d560988540b23de2ac1ad443b219afdb6",
+  strip_prefix = "jsoncpp-1.8.4",
+  urls = ["https://github.com/open-source-parsers/jsoncpp/archive/1.8.4.tar.gz"],
+)
