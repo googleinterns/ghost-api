@@ -45,7 +45,7 @@ http_archive(
 # See https://github.com/open-source-parsers/jsoncpp
 http_archive(
   name = "com_github_open_source_parsers_jsoncpp",
-  build_file = "//example/third-party:BUILD.jsoncpp",
+  build_file = "//example/third_party:BUILD.jsoncpp",
   sha256 =
       "c49deac9e0933bcb7044f08516861a2d560988540b23de2ac1ad443b219afdb6",
   strip_prefix = "jsoncpp-1.8.4",

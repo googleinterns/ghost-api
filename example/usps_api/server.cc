@@ -11,9 +11,10 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations under
 // the License.
+#include "config/config_parser.h"
+
 #include <string>
 #include <iostream>
-
 #include <grpc/grpc.h>
 #include <grpcpp/server.h>
 #include <grpcpp/server_builder.h>
@@ -92,6 +93,7 @@ namespace servercore {
 // see https://abseil.io/docs/cpp/guides/flags
 int main(int argc, char *argv[]) {
   absl::ParseCommandLine(argc, argv);
+  Config::Initialize();
   if (servercore::IsValidAddress(absl::GetFlag(FLAGS_HOST))) {
     servercore::Run(absl::GetFlag(FLAGS_HOST), absl::GetFlag(FLAGS_PORT));
   } else {

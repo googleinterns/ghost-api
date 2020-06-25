@@ -1,11 +1,19 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_proto_library")
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+
+cc_library(
+    name = "config-parser",
+    srcs = ["config/config_parser.cc"],
+    hdrs = ["config/config_parser.h"],
+    deps = ["@com_github_open_source_parsers_jsoncpp//:jsoncpp"],
+)
 
 cc_binary(
   name = "run-server",
   srcs = ["server.cc"],
   deps = [
+      ":config-parser",
       "//proto:sfc_cc_grpc_proto",
       "@com_github_grpc_grpc//:grpc++",
       "@com_google_absl//absl/flags:flag",
