@@ -23,8 +23,14 @@ void Config::Initialize() {
   if (file.good()) {
     std::cout << "Reading from config.json" << std::endl;
     Json::Value root;
-    file >> root;
-    Config::ParseConfig(root);
+    Json::CharReaderBuilder builder;
+    std::string errs;
+    bool isValidJson = Json::parseFromStream(builder, file, &root, &errs);
+    if (isValidJson) {
+      Config::ParseConfig(root);
+    } else {
+      std::cout << "Invalid JSON in config: " << errs << std::endl;
+    }
   } else {
     std::cout << "Created config.json" << std::endl;
     std::ofstream outfile(filename);
