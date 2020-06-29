@@ -23,6 +23,7 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "proto/usps_api/sfc.grpc.pb.h"
+#include <arpa/inet.h>
 
 ABSL_FLAG(std::string, HOST, "localhost", "The host of the ip to listen on");
 // The port will be within a valid range due to the flag being uint16_t type.
@@ -73,18 +74,10 @@ namespace servercore {
     if (host.compare("localhost") == 0) {
       return true;
     }
-    int A, B, C, D;
-    // Temporary variable to catch a longer input ip address.
-    char terms [1];
-    int matched = sscanf(host.c_str(), "%d.%d.%d.%d%s", &A, &B, &C, &D, terms);
-    if (matched != 4) {
-      return false;
-    } else if (A < 0 || B < 0 || C < 0 || D < 0) {
-      return false;
-    } else if (A > 255 || B > 255 || C > 255 || D > 255) {
-      return false;
-    }
-    return true;
+    // The inet_pton library handles ip verification.
+    struct sockaddr_in sa;
+    int result = inet_pton(AF_INET, host.c_str(), &(sa.sin_addr));
+    return result == 1;
   }
 }
 
