@@ -25,10 +25,10 @@
 #include "proto/usps_api/sfc.grpc.pb.h"
 
 ABSL_FLAG(std::string, HOST, "localhost", "The host of the ip to listen on");
-// port will be within range due to flag definition
+// The port will be within a valid range due to the flag being uint16_t type.
 ABSL_FLAG(std::uint16_t, PORT, 0, "The port of the ip to listen on");
 
-// implementation of 3 rpc functions
+// This is the implementation of the 3 rpc functions in the proto file.
 class GhostImpl final : public ghost::SfcService::Service {
   public:
     grpc::Status CreateSfc(grpc::ServerContext* context,
@@ -49,9 +49,9 @@ class GhostImpl final : public ghost::SfcService::Service {
 };
 
 namespace servercore {
-  // Runs server using server builder
-  // see https://grpc.io/docs/languages/cpp/basics/
-  // TODO(sam) use absl:status as return type & config behavior functionality
+  // Runs the server using the grpc server builder.
+  // See https://grpc.io/docs/languages/cpp/basics/ for more info
+  // TODO(sam) use absl:status as return type & implement configuration.
   void Run(std::string host, uint16_t port) {
     std::string server_address = host + ":" + std::to_string(port);
     std::cout << "Server attempting to listen on " << server_address << std::endl;
@@ -68,14 +68,13 @@ namespace servercore {
     server->Wait();
   }
 
-  // verifies a valid IPV4 address in the form A.B.C.D or localhost
-  // port is already valid due to flag parser
+  // Verifies a valid IPV4 address in the form A.B.C.D or localhost.
   bool IsValidAddress(std::string host) {
     if (host.compare("localhost") == 0) {
       return true;
     }
     int A, B, C, D;
-    // temp variable to catch longer input ip address
+    // Temporary variable to catch a longer input ip address.
     char terms [1];
     int matched = sscanf(host.c_str(), "%d.%d.%d.%d%s", &A, &B, &C, &D, terms);
     if (matched != 4) {
@@ -89,8 +88,8 @@ namespace servercore {
   }
 }
 
-// using abseil flags to parse host & port at runtime
-// see https://abseil.io/docs/cpp/guides/flags
+// This uses abseil flags to parse the host & port at runtime.
+// See https://abseil.io/docs/cpp/guides/flags for more information on flags.
 int main(int argc, char *argv[]) {
   absl::ParseCommandLine(argc, argv);
   Config::Initialize();
