@@ -18,7 +18,7 @@
 
 // Reads the configuration file or creates one if not present.
 void Config::Initialize() {
-  char filename[] = "config/config.json";
+  const std::string filename = "config/config.json";
   std::ifstream file(filename, std::ifstream::binary);
   if (file.good()) {
     std::cout << "Reading from config.json" << std::endl;
