@@ -17,7 +17,7 @@
 #include <fstream>
 
 // Reads the configuration file or creates one if not present.
-void Config::Initialize() {
+void usps_api_server::Config::Initialize() {
   const std::string filename = "config/config.json";
   std::ifstream file(filename, std::ifstream::binary);
   if (file.good()) {
@@ -39,7 +39,7 @@ void Config::Initialize() {
 
 // A helper function to parse the values in the configuration file.
 // TODO(sam) Implement functionality & gmock tests for this function.
-void Config::ParseConfig(Json::Value root) {
+void usps_api_server::Config::ParseConfig(Json::Value root) {
   std::string enc = root.get("encoding", "").asString();
   std::cout << enc << std::endl;
 }

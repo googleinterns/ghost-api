@@ -12,7 +12,10 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 #include "json/json.h"
-namespace Config {
-  void Initialize();
-  void ParseConfig(Json::Value root);
+namespace usps_api_server {
+  class Config {
+    public:
+      void ParseConfig(Json::Value root);
+      void Initialize();
+  };
 }
