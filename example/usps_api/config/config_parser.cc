@@ -25,8 +25,8 @@ void Config::Initialize() {
     Json::Value root;
     Json::CharReaderBuilder builder;
     std::string errs;
-    bool isValidJson = Json::parseFromStream(builder, file, &root, &errs);
-    if (isValidJson) {
+    bool valid_json = Json::parseFromStream(builder, file, &root, &errs);
+    if (valid_json) {
       Config::ParseConfig(root);
     } else {
       std::cout << "Invalid JSON in config: " << errs << std::endl;
