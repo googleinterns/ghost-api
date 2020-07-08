@@ -34,3 +34,14 @@ cc_binary(
       "@com_google_absl//absl/flags:parse",
   ],
 )
+
+cc_binary(
+  name = "run-client",
+  srcs = ["client.cc"],
+  deps = [
+      "//proto:sfc_cc_grpc_proto",
+      "@com_github_grpc_grpc//:grpc++",
+      "@com_google_absl//absl/flags:flag",
+      "@com_google_absl//absl/flags:parse",
+  ]
+)
