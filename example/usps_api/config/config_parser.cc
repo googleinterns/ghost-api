@@ -102,7 +102,8 @@ bool usps_api_server::Config::FilterMatch(Filter* filter,
           return false;
         }
       }
-    } else if (ghost_filter.has_routing_id()) {
+    }
+    if (ghost_filter.has_routing_id()) {
       std::list<ghost::GhostRoutingIdentifier>::iterator it;
       std::list<ghost::GhostRoutingIdentifier> routings = filter->routings;
       // If instead we have a GhostRoutingIdentifier, check the routings list.
