@@ -11,6 +11,7 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations under
 // the License.
+#include "utils/file_reader.h"
 #include <string>
 #include <iostream>
 #include <cstdint>
@@ -96,6 +97,18 @@ namespace usps_api_client {
       dest_label_prefix->set_prefix_len(prefix_len);
       client->CreateSfc(&context, request, &response);
     }
+    std::shared_ptr<grpc::ChannelCredentials> GetCreds(std::string key_file,
+                                                       std::string key_cert,
+                                                       std::string key_root) {
+      std::string key = FileReader::ReadString(key_file);
+      std::string cert = FileReader::ReadString(key_cert);
+      std::string root = FileReader::ReadString(key_root);
+      grpc::SslCredentialsOptions ssl_opts;
+      ssl_opts.pem_root_certs = root;
+      ssl_opts.pem_cert_chain = cert;
+      ssl_opts.pem_private_key = key;
+      return grpc::SslCredentials(ssl_opts);
+    }
   }
 }
 
@@ -103,8 +116,11 @@ int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
   std::string server_address = absl::GetFlag(FLAGS_HOST) + ":" +
       std::to_string(absl::GetFlag(FLAGS_PORT));
+  std::shared_ptr<grpc::ChannelCredentials> creds =
+      usps_api_client::GetCreds("ssl/client.key",
+                                "ssl/client.crt",
+                                "ssl/ca.crt");
   usps_api_client::GhostClient client(
-      grpc::CreateChannel(server_address,
-                          grpc::InsecureChannelCredentials()));
+      grpc::CreateChannel(server_address, creds));
   return 0;
 }

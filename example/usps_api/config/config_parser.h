@@ -25,6 +25,10 @@ namespace usps_api_server {
       };
       std::string host;
       std::uint16_t port;
+      bool enable_ssl;
+      std::string key;
+      std::string cert;
+      std::string root;
       bool create;
       bool del;
       bool query;

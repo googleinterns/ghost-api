@@ -12,6 +12,7 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 #include "config/config_parser.h"
+#include "utils/file_reader.h"
 
 #include <string>
 #include <iostream>
@@ -88,6 +89,21 @@ namespace usps_api_server {
           return grpc::Status::OK;
         }
     };
+    // Gets server credentials if ssl is enabled
+    std::shared_ptr<grpc::ServerCredentials> GetCreds() {
+      if (config->enable_ssl) {
+        std::string key = FileReader::ReadString(config->key);
+        std::string cert = FileReader::ReadString(config->cert);
+        std::string root = FileReader::ReadString(config->root);
+        grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp = {key, cert};
+        grpc::SslServerCredentialsOptions ssl_opts;
+        ssl_opts.pem_root_certs = root;
+        ssl_opts.pem_key_cert_pairs.push_back(pkcp);
+        return grpc::SslServerCredentials(ssl_opts);
+      } else {
+        return grpc::InsecureServerCredentials();
+      }
+    }
     // Runs the server using the grpc server builder.
     // See https://grpc.io/docs/languages/cpp/basics/ for more info
     // TODO(sam) use absl:status as return type & implement configuration.
@@ -96,7 +112,8 @@ namespace usps_api_server {
       std::cout << "Server attempting to listen on " << server_address << std::endl;
       grpc::ServerBuilder builder;
       GhostImpl service;
-      builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+      std::shared_ptr<grpc::ServerCredentials> creds = GetCreds();
+      builder.AddListeningPort(server_address, creds);
       builder.RegisterService(&service);
       std::unique_ptr<grpc::Server> server = builder.BuildAndStart();
       if (server == nullptr) {
@@ -106,7 +123,6 @@ namespace usps_api_server {
       std::cout << "Server listening on " << server_address << std::endl;
       server->Wait();
     }
-
     // Verifies a valid IPV4 address in the form A.B.C.D or localhost.
     bool IsValidAddress(std::string host) {
       if (host.compare("localhost") == 0) {
@@ -123,7 +139,7 @@ namespace usps_api_server {
 // See https://abseil.io/docs/cpp/guides/flags for more information on flags.
 int main(int argc, char *argv[]) {
   absl::ParseCommandLine(argc, argv);
-  usps_api_server::config->Initialize();  
+  usps_api_server::config->Initialize(); 
   // Prioritize using address specified in flags.
   if (usps_api_server::IsValidAddress(absl::GetFlag(FLAGS_HOST))) {
     usps_api_server::Run(absl::GetFlag(FLAGS_HOST), absl::GetFlag(FLAGS_PORT));

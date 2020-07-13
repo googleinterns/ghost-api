@@ -45,6 +45,7 @@ void usps_api_server::Config::ParseConfig(Json::Value root) {
   const Json::Value address = root["address"];
   host = address.get("host", "").asString();
   port = address.get("port", 0).asInt();
+  enable_ssl = address.get("enable_ssl", false).asBool();
 
   const Json::Value requests = root["requests"];
   create = requests.get("create", true).asBool();
@@ -56,6 +57,12 @@ void usps_api_server::Config::ParseConfig(Json::Value root) {
   ParseIdentifiers(&allow, sfcfilter["allow"]);
   ParseIdentifiers(&delay, sfcfilter["delay"]);
   delay_time = sfcfilter["delay"].get("seconds", 0).asInt();
+
+  const Json::Value ssl = root["ssl"];
+  enable_ssl = ssl.get("enable", false).asBool();
+  key = ssl.get("key", "").asString();
+  cert = ssl.get("cert", "").asString();
+  root = ssl.get("root", "").asString();
 }
 
 // Parses the configuration file for TunnelIdentifiers and RoutingIdentifiers.
