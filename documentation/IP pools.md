@@ -55,7 +55,3 @@ Rack | VIP type | VIPs
 --- | --- | ---
 Nuq13 | UDP/GRE tunnel | 136.22.65.96, 2604:ca00:f:61::0
 Nuq13 | API-server |  136.22.65.107, 2604:ca00:f:61::b
-
-### Partner IP pools
-
-TODO
