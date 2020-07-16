@@ -38,9 +38,14 @@ SJC1 | API-server | 64.9.240.107, 2604:ca00:f001:3::b
 SJC2 | UDP/GRE tunnel | 64.9.240.160, 2604:ca00:f001:4::0
 SJC2 | API-server | 64.9.240.171, 2604:ca00:f001:4::b
 
-### Starlink IP pools
+### Partner IP pools
 
-TODO
+Category | IPs
+--- | ---
+GW IPv6 | 2620:134:b000::0/40
+Cloud (private cluster) | 35.227.135.188/30, 35.223.251.42/32, 192.31.242.0/24
+Cloud (public cloud) | 13.72.26.23, 13.72.26.223
+CDR/NBR SFTP-server | 35.230.181.207
 
 ## Lab/testing
 
@@ -51,6 +56,6 @@ Rack | VIP type | VIPs
 Nuq13 | UDP/GRE tunnel | 136.22.65.96, 2604:ca00:f:61::0
 Nuq13 | API-server |  136.22.65.107, 2604:ca00:f:61::b
 
-### Starlink IP pools
+### Partner IP pools
 
 TODO
