@@ -2,21 +2,54 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_proto_library")
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 
+cc_proto_library(
+  name = "sfc_filter_cc_proto",
+  deps = ["//proto:sfc_filter_proto"],
+)
+
+cc_proto_library(
+  name = "ghost_label_cc_proto",
+  deps = ["//proto:ghost_label_proto"],
+)
+
 cc_library(
-    name = "config-parser",
-    srcs = ["config/config_parser.cc"],
-    hdrs = ["config/config_parser.h"],
-    deps = ["@com_github_open_source_parsers_jsoncpp//:jsoncpp"],
+  name = "config-parser",
+  srcs = ["config/config_parser.cc"],
+  hdrs = ["config/config_parser.h"],
+  deps = [
+      "@com_github_open_source_parsers_jsoncpp//:jsoncpp",
+      ":sfc_filter_cc_proto",
+      ":ghost_label_cc_proto",
+  ],
+)
+
+cc_library(
+  name = "file-reader",
+  srcs = ["utils/file_reader.cc"],
+  hdrs = ["utils/file_reader.h"]
 )
 
 cc_binary(
   name = "run-server",
   srcs = ["server.cc"],
   deps = [
+      ":file-reader",
       ":config-parser",
       "//proto:sfc_cc_grpc_proto",
       "@com_github_grpc_grpc//:grpc++",
       "@com_google_absl//absl/flags:flag",
       "@com_google_absl//absl/flags:parse",
   ],
+)
+
+cc_binary(
+  name = "run-client",
+  srcs = ["client.cc"],
+  deps = [
+      ":file-reader",
+      "//proto:sfc_cc_grpc_proto",
+      "@com_github_grpc_grpc//:grpc++",
+      "@com_google_absl//absl/flags:flag",
+      "@com_google_absl//absl/flags:parse",
+  ]
 )

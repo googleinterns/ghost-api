@@ -12,6 +12,7 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 #include "config/config_parser.h"
+#include "utils/file_reader.h"
 
 #include <string>
 #include <iostream>
@@ -24,32 +25,85 @@
 #include "absl/flags/parse.h"
 #include "proto/usps_api/sfc.grpc.pb.h"
 #include <arpa/inet.h>
+#include <thread>
+#include <chrono>
 
-ABSL_FLAG(std::string, HOST, "localhost", "The host of the ip to listen on");
+ABSL_FLAG(std::string, HOST, "", "The host of the ip to listen on");
 // The port will be within a valid range due to the flag being uint16_t type.
 ABSL_FLAG(std::uint16_t, PORT, 0, "The port of the ip to listen on");
 namespace usps_api_server {
   // This is the implementation of the 3 rpc functions in the proto file.
   namespace {
+    Config* config = new Config;
     class GhostImpl final : public ghost::SfcService::Service {
-        public:
-          grpc::Status CreateSfc(grpc::ServerContext* context,
-                           const ghost::CreateSfcRequest* request,
-                           ghost::CreateSfcResponse* response) override {
+      public:
+        grpc::Status CreateSfc(grpc::ServerContext* context,
+                         const ghost::CreateSfcRequest* request,
+                         ghost::CreateSfcResponse* response) override {
+          // If creating is disabled, deny request.
+          if (!(config->create)) {
+            return grpc::Status::CANCELLED;
+          }
+          const ghost::SfcFilter sfc_filter = request->sfc_filter();
+          // Delay list is active.
+          if (config->FilterActive(&(config->delay))) {
+            if (config->FilterMatch(&(config->delay), sfc_filter)) {
+              int delay_time = config->delay_time * 1000;
+              // TODO(sam) use multithreading to avoid blocking main thread
+              std::this_thread::sleep_for(std::chrono::milliseconds(delay_time));
+              return grpc::Status::OK;
+            }
+          }
+          // Deny list is active.
+          if (config->FilterActive(&(config->deny))) {
+            if (config->FilterMatch(&(config->deny), sfc_filter)) {
+              return grpc::Status::CANCELLED;
+            }
+            return grpc::Status::OK;
+          } else if (config->FilterActive(&(config->allow))) {
+            // Allow list is active.
+            if (config->FilterMatch(&(config->allow), sfc_filter)) {
+              return grpc::Status::OK;
+            }
+            return grpc::Status::CANCELLED;
+          } else { // Neither allow or deny is active.
             return grpc::Status::OK;
           }
-          grpc::Status DeleteSfc(grpc::ServerContext* context,
-                                 const ghost::DeleteSfcRequest* request,
-                                 ghost::DeleteSfcResponse* response) override {
-            return grpc::Status::OK;
+        }
+        grpc::Status DeleteSfc(grpc::ServerContext* context,
+                               const ghost::DeleteSfcRequest* request,
+                               ghost::DeleteSfcResponse* response) override {
+          // If deleting is disabled, deny request.
+          if (!(config->del)) {
+            return grpc::Status::CANCELLED;
           }
-          grpc::Status Query(grpc::ServerContext* context,
-                             const ghost::QueryRequest* request,
-                             ghost::QueryResponse* response) override {
-            return grpc::Status::OK;
+          return grpc::Status::OK;
+        }
+        grpc::Status Query(grpc::ServerContext* context,
+                           const ghost::QueryRequest* request,
+                           ghost::QueryResponse* response) override {
+          // If querying is disabled, deny request.
+          if (!(config->query)) {
+            return grpc::Status::CANCELLED;
           }
-      };
-
+          return grpc::Status::OK;
+        }
+    };
+    // Gets server credentials if ssl is enabled
+    std::shared_ptr<grpc::ServerCredentials> GetCreds() {
+      if (config->enable_ssl) {
+        std::string key = FileReader::ReadString(config->key);
+        std::string cert = FileReader::ReadString(config->cert);
+        std::string root = FileReader::ReadString(config->root);
+        grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp = {key, cert};
+        grpc::SslServerCredentialsOptions ssl_opts;
+        ssl_opts.pem_root_certs = root;
+        ssl_opts.pem_key_cert_pairs.push_back(pkcp);
+        return grpc::SslServerCredentials(ssl_opts);
+      } else {
+        return grpc::InsecureServerCredentials();
+      }
+    }
     // Runs the server using the grpc server builder.
     // See https://grpc.io/docs/languages/cpp/basics/ for more info
     // TODO(sam) use absl:status as return type & implement configuration.
@@ -58,7 +112,8 @@ namespace usps_api_server {
       std::cout << "Server attempting to listen on " << server_address << std::endl;
       grpc::ServerBuilder builder;
       GhostImpl service;
-      builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+      std::shared_ptr<grpc::ServerCredentials> creds = GetCreds();
+      builder.AddListeningPort(server_address, creds);
       builder.RegisterService(&service);
       std::unique_ptr<grpc::Server> server = builder.BuildAndStart();
       if (server == nullptr) {
@@ -68,7 +123,6 @@ namespace usps_api_server {
       std::cout << "Server listening on " << server_address << std::endl;
       server->Wait();
     }
-
     // Verifies a valid IPV4 address in the form A.B.C.D or localhost.
     bool IsValidAddress(std::string host) {
       if (host.compare("localhost") == 0) {
@@ -85,12 +139,21 @@ namespace usps_api_server {
 // See https://abseil.io/docs/cpp/guides/flags for more information on flags.
 int main(int argc, char *argv[]) {
   absl::ParseCommandLine(argc, argv);
-  usps_api_server::Config config;
-  config.Initialize();
+  usps_api_server::config->Initialize(); 
+  // Prioritize using address specified in flags.
   if (usps_api_server::IsValidAddress(absl::GetFlag(FLAGS_HOST))) {
     usps_api_server::Run(absl::GetFlag(FLAGS_HOST), absl::GetFlag(FLAGS_PORT));
+  } else if (usps_api_server::config->host != "") {
+    // Fall back to address in config if present.
+    std::string host = usps_api_server::config->host;
+    std::uint16_t port = usps_api_server::config->port;
+    if (usps_api_server::IsValidAddress(host)) {
+      usps_api_server::Run(host, port);
+    } else {
+      std::cout << "Invalid address in config." << std::endl;
+    }
   } else {
-    std::cout << "Invalid host or port" << std::endl;
+    std::cout << "Invalid address specified." << std::endl;
   }
   return 0;
 }
