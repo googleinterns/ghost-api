@@ -141,9 +141,9 @@ bool usps_api_server::Config::FilterMatch(Filter* filter,
       for (it = tunnels.begin(); it != tunnels.end(); ++it) {
         ghost::GhostTunnelIdentifier filter_id = *it;
         bool matched = google::protobuf::util::MessageDifferencer::Equals(filter_id, ghost_filter.tunnel_id());
-        // If one filter does not match, then its not a match.
-        if (!matched) {
-          return false;
+        // If filter matches, return true
+        if (matched) {
+          return true;
         }
       }
     }
@@ -154,13 +154,13 @@ bool usps_api_server::Config::FilterMatch(Filter* filter,
       for (it = routings.begin(); it != routings.end(); ++it) {
         ghost::GhostRoutingIdentifier filter_id = *it;
         bool matched = google::protobuf::util::MessageDifferencer::Equals(filter_id, ghost_filter.routing_id());
-        if (!matched) {
-          return false;
+        if (matched) {
+          return true;
         }
       }
     }
   }
-  return true;
+  return false;
 }
 
 // Returns true if a given filter is active.
