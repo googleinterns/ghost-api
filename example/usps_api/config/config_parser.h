@@ -43,7 +43,7 @@ namespace usps_api_server {
       void FileWatch();
       void ParseConfig(Json::Value root);
       void ParseIdentifiers(Filter* filter, Json::Value root);
-      bool FilterMatch(Filter* filter, ghost::SfcFilter sfc_filter);
+      bool FilterMatch(Filter* filter, const ghost::SfcFilter* sfc_filter);
       bool FilterActive(Filter* filter);
   };
 }

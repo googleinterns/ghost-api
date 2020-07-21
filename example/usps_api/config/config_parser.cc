@@ -128,10 +128,10 @@ void usps_api_server::Config::ParseIdentifiers(Filter* filter,
 }
 // Will return true if the exact same filters in 'sfc_filter' are in 'filter'
 bool usps_api_server::Config::FilterMatch(Filter* filter,
-                                          ghost::SfcFilter sfc_filter) {
+                                          const ghost::SfcFilter* sfc_filter) {
   // Iterates over all filter layers in sfc_filter.
-  for (int i = 0; i < sfc_filter.filter_layers_size(); ++i) {
-    ghost::FilterLayer filter_layer = sfc_filter.filter_layers(i);
+  for (int i = 0; i < sfc_filter->filter_layers_size(); ++i) {
+    ghost::FilterLayer filter_layer = sfc_filter->filter_layers(i);
     const ghost::GhostFilter ghost_filter = filter_layer.ghost_filter();
     // If layer contains a GhostTunnelIdentifier,
     // check if tunnels list contains same filters

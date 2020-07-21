@@ -36,7 +36,7 @@ grpc::Status usps_api_server::GhostImpl::CreateSfc(grpc::ServerContext* context,
   const ghost::SfcFilter sfc_filter = request->sfc_filter();
   // Delay list is active.
   if (config->FilterActive(&(config->delay))) {
-    if (config->FilterMatch(&(config->delay), sfc_filter)) {
+    if (config->FilterMatch(&(config->delay), &sfc_filter)) {
       int delay_time = config->delay_time * 1000;
       // TODO(sam) use multithreading to avoid blocking main thread
       std::this_thread::sleep_for(std::chrono::milliseconds(delay_time));
@@ -45,13 +45,13 @@ grpc::Status usps_api_server::GhostImpl::CreateSfc(grpc::ServerContext* context,
   }
   // Deny list is active.
   if (config->FilterActive(&(config->deny))) {
-    if (config->FilterMatch(&(config->deny), sfc_filter)) {
+    if (config->FilterMatch(&(config->deny), &sfc_filter)) {
       return grpc::Status::CANCELLED;
     }
     return grpc::Status::OK;
   } else if (config->FilterActive(&(config->allow))) {
     // Allow list is active.
-    if (config->FilterMatch(&(config->allow), sfc_filter)) {
+    if (config->FilterMatch(&(config->allow), &sfc_filter)) {
       return grpc::Status::OK;
     }
     return grpc::Status::CANCELLED;
