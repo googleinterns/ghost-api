@@ -116,10 +116,7 @@ int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
   std::string server_address = absl::GetFlag(FLAGS_HOST) + ":" +
       std::to_string(absl::GetFlag(FLAGS_PORT));
-  std::shared_ptr<grpc::ChannelCredentials> creds =
-      usps_api_client::GetCreds("ssl/client.key",
-                                "ssl/client.crt",
-                                "ssl/ca.crt");
+  std::shared_ptr<grpc::ChannelCredentials> creds = grpc::InsecureChannelCredentials();
   usps_api_client::GhostClient client(
       grpc::CreateChannel(server_address, creds));
   return 0;
