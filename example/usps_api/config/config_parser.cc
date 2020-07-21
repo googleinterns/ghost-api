@@ -81,7 +81,6 @@ void usps_api_server::Config::ParseConfig(Json::Value root) {
   const Json::Value address = root["address"];
   host = address.get("host", "").asString();
   port = address.get("port", 0).asInt();
-  enable_ssl = address.get("enable_ssl", false).asBool();
 
   const Json::Value requests = root["requests"];
   create = requests.get("create", true).asBool();
