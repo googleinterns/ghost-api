@@ -99,6 +99,7 @@ int main(int argc, char *argv[]) {
     }
   } else {
     std::cout << "Invalid address specified." << std::endl;
+    std::cout << "Please use -HOST=hostname -PORT=number" << std::endl;
   }
   return 0;
 }
