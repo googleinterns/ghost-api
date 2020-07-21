@@ -11,10 +11,14 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations under
 // the License.
+#ifndef CONFIG_PARSER_H
+#define CONFIG_PARSER_H
+
 #include "proto/usps_api/sfc_filter.pb.h"
 #include "json/json.h"
 #include <string>
 #include <list>
+
 
 namespace usps_api_server {
   class Config {
@@ -34,10 +38,14 @@ namespace usps_api_server {
       bool query;
       int delay_time;
       Filter deny, allow, delay;
+      bool Initialize();
+      void MonitorConfig();
+      void FileWatch();
       void ParseConfig(Json::Value root);
-      void Initialize();
       void ParseIdentifiers(Filter* filter, Json::Value root);
       bool FilterMatch(Filter* filter, ghost::SfcFilter sfc_filter);
       bool FilterActive(Filter* filter);
   };
 }
+
+#endif

@@ -17,25 +17,61 @@
 #include <iostream>
 #include <fstream>
 #include <google/protobuf/util/message_differencer.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <thread>
+#include <sys/types.h>
+#include <sys/inotify.h>
+
+#define EVENT_SIZE (sizeof(struct inotify_event))
+#define BUF_LEN ((1024*( EVENT_SIZE + 16 )))
+
+// Runs FileWatch on another thread
+void usps_api_server::Config::MonitorConfig() {
+  std::thread monitor (&usps_api_server::Config::FileWatch, this);
+  monitor.detach();
+}
+
+// Watches the config file for updates and reloads it.
+void usps_api_server::Config::FileWatch() {
+  while(true) {
+    char buffer[BUF_LEN];
+    int fd = inotify_init();
+    int wd = inotify_add_watch(fd, "example/usps_api/config/config.json",
+                               IN_MODIFY | IN_CREATE);
+    int i = 0;
+    int length = read(fd, buffer, BUF_LEN);
+    while(i < length) {
+      struct inotify_event* event = ( struct inotify_event * ) &buffer[ i ];
+      Initialize();
+      i+= EVENT_SIZE + event->len;
+    }
+    inotify_rm_watch(fd, wd);
+    close(fd);
+  }
+}
 
 // Reads the configuration file or creates one if not present.
-void usps_api_server::Config::Initialize() {
-  const std::string filename = "config/config.json";
+bool usps_api_server::Config::Initialize() {
+  const std::string filename = "example/usps_api/config/config.json";
   std::ifstream file(filename, std::ifstream::binary);
   if (file.good()) {
-    std::cout << "Reading from config.json" << std::endl;
+    std::cout << "Reading from " << filename << std::endl;
     Json::Value root;
     Json::CharReaderBuilder builder;
     std::string errs;
     bool valid_json = Json::parseFromStream(builder, file, &root, &errs);
     if (valid_json) {
       Config::ParseConfig(root);
+      return true;
     } else {
-      std::cout << "Invalid JSON in config: " << errs << std::endl;
+      std::cout << "Invalid JSON in " << filename  << errs << std::endl;
+      return false;
     }
   } else {
-    std::cout << "Created config.json" << std::endl;
-    std::ofstream outfile(filename);
+    std::cout << filename << " does not exist" << std::endl;
+    return false;
   }
 }
 
@@ -70,6 +106,8 @@ void usps_api_server::Config::ParseIdentifiers(Filter* filter,
                                                Json::Value root) {
   const Json::Value tunnels = root["ghost_tunnel_identifier"]["ghostlabel"];
   const Json::Value routings = root["ghost_routing_identifier"]["destination_label_prefix"];
+  filter->tunnels.clear();
+  filter->routings.clear();
   // Adds given ghostlabel's in ghost_tunnel_identifier to filter's tunnel list.
   for (unsigned int index = 0; index < tunnels.size(); ++index) {
     ghost::GhostTunnelIdentifier tunnel_id;
