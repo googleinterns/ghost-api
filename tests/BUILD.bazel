@@ -1,0 +1,12 @@
+cc_test(
+    name = "tests",
+    srcs = glob(["**/*.cc"]),
+    deps = [
+        "//example/usps_api:server-lib",
+        "@googletest//:gtest_main",
+        "@com_github_open_source_parsers_jsoncpp//:jsoncpp",
+        "//proto:sfc_cc_grpc_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "//example/usps_api/config:ghost_label_cc_proto",
+    ],
+)

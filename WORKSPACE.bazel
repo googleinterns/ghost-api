@@ -1,4 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 # Protobuf Rules for Bazel
 # See https://github.com/bazelbuild/rules_proto
 http_archive(
@@ -50,4 +51,10 @@ http_archive(
       "c49deac9e0933bcb7044f08516861a2d560988540b23de2ac1ad443b219afdb6",
   strip_prefix = "jsoncpp-1.8.4",
   urls = ["https://github.com/open-source-parsers/jsoncpp/archive/1.8.4.tar.gz"],
+)
+
+git_repository(
+    name = "googletest",
+    remote = "https://github.com/google/googletest",
+    tag = "release-1.10.0",
 )
