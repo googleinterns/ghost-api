@@ -83,7 +83,9 @@ bool IsValidAddress(std::string host) {
 int main(int argc, char *argv[]) {
   absl::ParseCommandLine(argc, argv);
   usps_api_server::Config* config = new usps_api_server::Config();
-  config->Initialize();
+  if(!(config->Initialize())) {
+    return 1;
+  }
   config->MonitorConfig();
   // Prioritize using address specified in flags.
   if (IsValidAddress(absl::GetFlag(FLAGS_HOST))) {
