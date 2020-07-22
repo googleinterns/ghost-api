@@ -44,19 +44,28 @@ namespace usps_api_client {
          } else {
            std::cout << "Successfully created SFC" << std::endl;
          }
-         return;
        }
        // Send a DeleteSfc Request to server.
        void DeleteSfc(grpc::ClientContext* context,
-                      ghost::CreateSfcRequest request,
-                      ghost::CreateSfcResponse* response) {
-         return;
+                      ghost::DeleteSfcRequest request,
+                      ghost::DeleteSfcResponse* response) {
+         grpc::Status status = stub_->DeleteSfc(context, request, response);
+         if(!status.ok()) {
+           std::cout << "Failed to create SFC" << std::endl;
+         } else {
+           std::cout << "Successfully created SFC" << std::endl;
+         }
        }
        // Send a QuerySfc Request to server.
        void Query(grpc::ClientContext* context,
-                      ghost::CreateSfcRequest request,
-                      ghost::CreateSfcResponse* response) {
-         return;
+                      ghost::QueryRequest request,
+                      ghost::QueryResponse* response) {
+         grpc::Status status = stub_->Query(context, request, response);
+         if(!status.ok()) {
+           std::cout << "Failed to create SFC" << std::endl;
+         } else {
+           std::cout << "Successfully created SFC" << std::endl;
+         }
        }
       private:
         std::unique_ptr<ghost::SfcService::Stub> stub_;
