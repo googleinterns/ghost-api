@@ -45,13 +45,42 @@ namespace {
     return config;
   }
 }
+
+// Tests if config file does not exist
+TEST(ConfigTest, FileDoesNotExist) {
+  usps_api_server::Config *config = CreateConfig();
+  std::remove(filename.c_str());
+  EXPECT_FALSE(config->Initialize());
+  delete config;
+}
+// Tests behavior of bad config file
+TEST(ConfigTest, MissingBrackets) {
+  usps_api_server::Config *config = new usps_api_server::Config();
+  std::ifstream file(filename, std::ifstream::binary);
+  if(file.good()) {
+    std::remove(filename.c_str());
+  }
+  std::ofstream outfile(filename);
+  outfile << "{";
+  outfile.close();
+  EXPECT_FALSE(config->Initialize());
+  delete config;
+}
+TEST(ConfigTest, ImproperName) {
+  usps_api_server::Config *config = CreateConfig();
+  Json::Value root;
+  root["addresss"]["host"] = "2.2.2.2";
+  root["address"]["port"] = 123;
+  WriteToConfig(root);
+  config->Initialize();
+  EXPECT_NE(config->host, "2.2.2.2");
+  EXPECT_EQ(config->port, 123);
+  delete config;
+}
+
 // Tests if config behaves correctly if json is valid.
 TEST(ConfigTest, CanInitialize) {
   usps_api_server::Config *config = CreateConfig();
-  EXPECT_TRUE(config->Initialize());
-  std::remove(filename.c_str());
-  EXPECT_FALSE(config->Initialize());
-  config = CreateConfig();
   EXPECT_TRUE(config->Initialize());
   delete config;
 }
@@ -70,6 +99,7 @@ TEST(ConfigTest, CanParseAddress) {
   EXPECT_EQ(config->port, 123);
   delete config;
 }
+
 // Tests if configuration can parse the allowed filters.
 TEST(ConfigTest, CanParseAllow) {
   usps_api_server::Config *config = CreateConfig();
