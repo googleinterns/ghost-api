@@ -19,8 +19,8 @@
 namespace usps_api_server {
 class GhostImpl final : public ghost::SfcService::Service {
  public:
-   explicit GhostImpl(Config*& c) {
-    config = c;
+   explicit GhostImpl(std::shared_ptr<Config> c) {
+    config_ = c;
    }
 
    grpc::Status CreateSfc(grpc::ServerContext* context,
@@ -34,6 +34,6 @@ class GhostImpl final : public ghost::SfcService::Service {
                          ghost::QueryResponse* response) override;
 
  private:
-   Config* config;
+   std::shared_ptr<Config> config_;
 };
 } //namespace

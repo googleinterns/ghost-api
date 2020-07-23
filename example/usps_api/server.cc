@@ -29,6 +29,7 @@
 grpc::Status usps_api_server::GhostImpl::CreateSfc(grpc::ServerContext* context,
                  const ghost::CreateSfcRequest* request,
                  ghost::CreateSfcResponse* response) {
+  Config* config = config_.get();
   // If creating is disabled, deny request.
   if (!(config->create_)) {
     return grpc::Status::CANCELLED;
@@ -62,6 +63,7 @@ grpc::Status usps_api_server::GhostImpl::CreateSfc(grpc::ServerContext* context,
 grpc::Status usps_api_server::GhostImpl::DeleteSfc(grpc::ServerContext* context,
                        const ghost::DeleteSfcRequest* request,
                        ghost::DeleteSfcResponse* response) {
+  Config* config = config_.get();
   // If deleting is disabled, deny request.
   if (!(config->del_)) {
     return grpc::Status::CANCELLED;
@@ -71,6 +73,7 @@ grpc::Status usps_api_server::GhostImpl::DeleteSfc(grpc::ServerContext* context,
 grpc::Status usps_api_server::GhostImpl::Query(grpc::ServerContext* context,
                    const ghost::QueryRequest* request,
                    ghost::QueryResponse* response){
+  Config* config = config_.get();
   // If querying is disabled, deny request.
   if (!(config->query_)) {
     return grpc::Status::CANCELLED;
