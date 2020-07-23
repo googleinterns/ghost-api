@@ -21,31 +21,31 @@
 
 
 namespace usps_api_server {
-  class Config {
-    public:
-      struct Filter {
-        std::list<ghost::GhostTunnelIdentifier> tunnels;
-        std::list<ghost::GhostRoutingIdentifier> routings;
-      };
-      std::string host;
-      std::uint16_t port;
-      bool enable_ssl;
-      std::string key;
-      std::string cert;
-      std::string root;
-      bool create;
-      bool del;
-      bool query;
-      int delay_time;
-      Filter deny, allow, delay;
-      bool Initialize();
-      void MonitorConfig();
-      void FileWatch();
-      void ParseConfig(Json::Value root);
-      void ParseIdentifiers(Filter* filter, Json::Value root);
-      bool FilterMatch(Filter* filter, const ghost::SfcFilter* sfc_filter);
-      bool FilterActive(Filter* filter);
-  };
+class Config {
+  public:
+    struct Filter {
+      std::list<ghost::GhostTunnelIdentifier> tunnels;
+      std::list<ghost::GhostRoutingIdentifier> routings;
+    };
+    std::string host;
+    std::uint16_t port;
+    bool enable_ssl;
+    std::string key;
+    std::string cert;
+    std::string root;
+    bool create;
+    bool del;
+    bool query;
+    int delay_time;
+    Filter deny, allow, delay;
+    bool Initialize();
+    void MonitorConfig();
+    void FileWatch();
+    void ParseConfig(Json::Value root);
+    void ParseIdentifiers(Filter* filter, Json::Value root);
+    bool FilterMatch(Filter* filter, const ghost::SfcFilter* sfc_filter);
+    bool FilterActive(Filter* filter);
+};
 }
 
 #endif
