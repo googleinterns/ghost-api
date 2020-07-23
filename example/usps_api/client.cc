@@ -55,7 +55,7 @@ class GhostClient {
      if(!status.ok()) {
        std::cout << "Failed to delete SFC" << std::endl;
      } else {
-       std::cout << "Successfully created SFC" << std::endl;
+       std::cout << "Successfully deleted SFC" << std::endl;
      }
    }
    // Send a QuerySfc Request to server.
