@@ -14,5 +14,5 @@
 #include <string>
 
 namespace FileReader {
-  std::string ReadString(std::string filename);
+std::string ReadString(std::string filename);
 }
