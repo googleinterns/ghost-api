@@ -33,10 +33,10 @@ ABSL_FLAG(std::uint16_t, PORT, 0, "The port of the ip to listen on");
 
 // Gets server credentials if ssl is enabled
 std::shared_ptr<grpc::ServerCredentials> GetCreds(usps_api_server::Config* config) {
-  if (config->enable_ssl) {
-    std::string key = FileReader::ReadString(config->key);
-    std::string cert = FileReader::ReadString(config->cert);
-    std::string root = FileReader::ReadString(config->root);
+  if (config->enable_ssl_) {
+    std::string key = FileReader::ReadString(config->key_);
+    std::string cert = FileReader::ReadString(config->cert_);
+    std::string root = FileReader::ReadString(config->root_);
     grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp = {key, cert};
     grpc::SslServerCredentialsOptions ssl_opts;
     ssl_opts.pem_root_certs = root;
@@ -90,10 +90,10 @@ int main(int argc, char *argv[]) {
   // Prioritize using address specified in flags.
   if (IsValidAddress(absl::GetFlag(FLAGS_HOST))) {
     Run(absl::GetFlag(FLAGS_HOST), absl::GetFlag(FLAGS_PORT), config);
-  } else if (config->host != "") {
+  } else if (config->host_ != "") {
     // Fall back to address in config if present.
-    std::string host = config->host;
-    std::uint16_t port = config->port;
+    std::string host = config->host_;
+    std::uint16_t port = config->port_;
     if (IsValidAddress(host)) {
       Run(host, port, config);
     } else {
@@ -103,5 +103,6 @@ int main(int argc, char *argv[]) {
     std::cout << "Invalid address specified." << std::endl;
     std::cout << "Please use -HOST=hostname -PORT=number" << std::endl;
   }
+  delete config;
   return 0;
 }

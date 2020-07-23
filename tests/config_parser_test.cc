@@ -24,10 +24,9 @@
 #include "json/json.h"
 
 namespace {
-  std::string filename = "example/usps_api/config/config.json";
   // Helper function that writes to the configuration file.
-  void WriteToConfig(Json::Value root) {
-    std::ofstream outfile(filename);
+  void WriteToConfig(usps_api_server::Config* config, Json::Value root) {
+    std::ofstream outfile(config->filename_);
     Json::StreamWriterBuilder builder;
     std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
     writer->write(root, &outfile);
@@ -36,12 +35,12 @@ namespace {
   // Helper function that creates a config instance.
   usps_api_server::Config* CreateConfig() {
     usps_api_server::Config *config = new usps_api_server::Config();
-    std::ifstream file(filename, std::ifstream::binary);
+    std::ifstream file(config->filename_, std::ifstream::binary);
     if(file.good()) {
-      std::remove(filename.c_str());
+      std::remove((config->filename_).c_str());
     }
     Json::Value root;
-    WriteToConfig(root);
+    WriteToConfig(config, root);
     return config;
   }
 }
@@ -49,18 +48,18 @@ namespace {
 // Tests if config file does not exist
 TEST(ConfigTest, FileDoesNotExist) {
   usps_api_server::Config *config = CreateConfig();
-  std::remove(filename.c_str());
+  std::remove((config->filename_).c_str());
   EXPECT_FALSE(config->Initialize());
   delete config;
 }
 // Tests behavior of bad config file
 TEST(ConfigTest, MissingBrackets) {
   usps_api_server::Config *config = new usps_api_server::Config();
-  std::ifstream file(filename, std::ifstream::binary);
+  std::ifstream file(config->filename_, std::ifstream::binary);
   if(file.good()) {
-    std::remove(filename.c_str());
+    std::remove((config->filename_).c_str());
   }
-  std::ofstream outfile(filename);
+  std::ofstream outfile(config->filename_);
   outfile << "{";
   outfile.close();
   EXPECT_FALSE(config->Initialize());
@@ -71,10 +70,10 @@ TEST(ConfigTest, ImproperName) {
   Json::Value root;
   root["addresss"]["host"] = "2.2.2.2";
   root["address"]["port"] = 123;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  EXPECT_NE(config->host, "2.2.2.2");
-  EXPECT_EQ(config->port, 123);
+  EXPECT_NE(config->host_, "2.2.2.2");
+  EXPECT_EQ(config->port_, 123);
   delete config;
 }
 
@@ -89,14 +88,14 @@ TEST(ConfigTest, CanParseAddress) {
   usps_api_server::Config *config = CreateConfig();
   Json::Value root;
   config->Initialize();
-  EXPECT_EQ(config->host, "");
-  EXPECT_EQ(config->port, 0);
+  EXPECT_EQ(config->host_, "");
+  EXPECT_EQ(config->port_, 0);
   root["address"]["host"] = "1.1.1.1";
   root["address"]["port"] = 123;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  EXPECT_EQ(config->host, "1.1.1.1");
-  EXPECT_EQ(config->port, 123);
+  EXPECT_EQ(config->host_, "1.1.1.1");
+  EXPECT_EQ(config->port_, 123);
   delete config;
 }
 
@@ -110,9 +109,9 @@ TEST(ConfigTest, CanParseAllow) {
   label["prefix_len"] = 2;
   labels.append(label);
   root["sfcfilter"]["allow"]["ghost_routing_identifier"]["destination_label_prefix"] = labels;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  std::list<ghost::GhostRoutingIdentifier> tunnels = config->allow.routings;
+  std::list<ghost::GhostRoutingIdentifier> tunnels = config->allow_.routings;
   EXPECT_GT(tunnels.size(), 0);
   ghost::GhostRoutingIdentifier id = tunnels.front();
   EXPECT_EQ(id.destination_label_prefix().value(), 1234);
@@ -129,9 +128,9 @@ TEST(ConfigTest, CanParseDeny) {
   label["service_label"] = 230;
   labels.append(label);
   root["sfcfilter"]["deny"]["ghost_tunnel_identifier"]["ghostlabel"] = labels;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  std::list<ghost::GhostTunnelIdentifier> tunnels = config->deny.tunnels;
+  std::list<ghost::GhostTunnelIdentifier> tunnels = config->deny_.tunnels;
   EXPECT_GT(tunnels.size(), 0);
   ghost::GhostTunnelIdentifier id = tunnels.front();
   EXPECT_EQ(id.terminal_label().value(), 1234);
@@ -148,43 +147,43 @@ TEST(ConfigTest, CanParseDelay) {
   label["service_label"] = 230;
   labels.append(label);
   root["sfcfilter"]["delay"]["ghost_tunnel_identifier"]["ghostlabel"] = labels;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  std::list<ghost::GhostTunnelIdentifier> tunnels = config->delay.tunnels;
+  std::list<ghost::GhostTunnelIdentifier> tunnels = config->delay_.tunnels;
   EXPECT_GT(tunnels.size(), 0);
   ghost::GhostTunnelIdentifier id = tunnels.front();
   EXPECT_EQ(id.terminal_label().value(), 1234);
   EXPECT_EQ(id.service_label().value(), 230);
-  EXPECT_EQ(config->delay_time, 0);
+  EXPECT_EQ(config->delay_time_, 0);
   root["sfcfilter"]["delay"]["seconds"] = 5;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  EXPECT_EQ(config->delay_time, 5);
+  EXPECT_EQ(config->delay_time_, 5);
   delete config;
 }
 // Tests if configuration parses request enabling.
 TEST(ConfigTest, CanParseRequests) {
   usps_api_server::Config *config = CreateConfig();
   config->Initialize();
-  EXPECT_EQ(config->create, true);
-  EXPECT_EQ(config->del, true);
-  EXPECT_EQ(config->query, true);
+  EXPECT_EQ(config->create_, true);
+  EXPECT_EQ(config->del_, true);
+  EXPECT_EQ(config->query_, true);
   Json::Value root;
   root["requests"]["create"] = false;
   root["requests"]["delete"] = false;
   root["requests"]["query"] = true;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  EXPECT_EQ(config->create, false);
-  EXPECT_EQ(config->del, false);
-  EXPECT_EQ(config->query, true);
+  EXPECT_EQ(config->create_, false);
+  EXPECT_EQ(config->del_, false);
+  EXPECT_EQ(config->query_, true);
   delete config;
 }
 // Tests if configuration can match two tunnel filters.
 TEST(ConfigTest, CanMatchFilterTunnel) {
   usps_api_server::Config *config = CreateConfig();
   config->Initialize();
-  EXPECT_FALSE(config->FilterActive(&(config->allow)));
+  EXPECT_FALSE(config->FilterActive(&(config->allow_)));
   Json::Value root;
   Json::Value labels;
   Json::Value label1;
@@ -196,9 +195,9 @@ TEST(ConfigTest, CanMatchFilterTunnel) {
   label2["service_label"] = 2;
   labels.append(label2);
   root["sfcfilter"]["allow"]["ghost_tunnel_identifier"]["ghostlabel"] = labels;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  EXPECT_TRUE(config->FilterActive(&(config->allow)));
+  EXPECT_TRUE(config->FilterActive(&(config->allow_)));
   ghost::SfcFilter sfc_filter;
   ghost::GhostFilter* filter = sfc_filter.add_filter_layers()->mutable_ghost_filter();
   ghost::GhostTunnelIdentifier* tunnel_id = filter->mutable_tunnel_id();
@@ -206,18 +205,18 @@ TEST(ConfigTest, CanMatchFilterTunnel) {
   terminal_label->set_value(100);
   ghost::GhostLabel* service_label = tunnel_id->mutable_service_label();
   service_label->set_value(1);
-  EXPECT_TRUE(config->FilterMatch(&(config->allow), &sfc_filter));
+  EXPECT_TRUE(config->FilterMatch(&(config->allow_), &sfc_filter));
   terminal_label->set_value(999);
-  EXPECT_FALSE(config->FilterMatch(&(config->allow), &sfc_filter));
+  EXPECT_FALSE(config->FilterMatch(&(config->allow_), &sfc_filter));
   service_label->set_value(2);
-  EXPECT_TRUE(config->FilterMatch(&(config->allow), &sfc_filter));
+  EXPECT_TRUE(config->FilterMatch(&(config->allow_), &sfc_filter));
   delete config;
 }
 // Tests if config can match two route filters.
 TEST(ConfigTest, CanMatchFilterRoute) {
   usps_api_server::Config *config = CreateConfig();
   config->Initialize();
-  EXPECT_FALSE(config->FilterActive(&(config->allow)));
+  EXPECT_FALSE(config->FilterActive(&(config->allow_)));
   Json::Value root;
   Json::Value labels;
   Json::Value label1;
@@ -229,19 +228,19 @@ TEST(ConfigTest, CanMatchFilterRoute) {
   label2["prefix_len"] = 2;
   labels.append(label2);
   root["sfcfilter"]["allow"]["ghost_routing_identifier"]["destination_label_prefix"] = labels;
-  WriteToConfig(root);
+  WriteToConfig(config, root);
   config->Initialize();
-  EXPECT_TRUE(config->FilterActive(&(config->allow)));
+  EXPECT_TRUE(config->FilterActive(&(config->allow_)));
   ghost::SfcFilter sfc_filter;
   ghost::GhostFilter* filter = sfc_filter.add_filter_layers()->mutable_ghost_filter();
   ghost::GhostRoutingIdentifier* routing_id = filter->mutable_routing_id();
   ghost::GhostLabelPrefix* dest_label = routing_id->mutable_destination_label_prefix();
   dest_label->set_value(100);
   dest_label->set_prefix_len(1);
-  EXPECT_TRUE(config->FilterMatch(&(config->allow), &sfc_filter));
+  EXPECT_TRUE(config->FilterMatch(&(config->allow_), &sfc_filter));
   dest_label->set_value(999);
-  EXPECT_FALSE(config->FilterMatch(&(config->allow), &sfc_filter));
+  EXPECT_FALSE(config->FilterMatch(&(config->allow_), &sfc_filter));
   dest_label->set_prefix_len(2);
-  EXPECT_TRUE(config->FilterMatch(&(config->allow), &sfc_filter));
+  EXPECT_TRUE(config->FilterMatch(&(config->allow_), &sfc_filter));
   delete config;
 }

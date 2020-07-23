@@ -38,7 +38,7 @@ void usps_api_server::Config::FileWatch() {
   while(true) {
     char buffer[BUF_LEN];
     int fd = inotify_init();
-    int wd = inotify_add_watch(fd, filename.c_str(),
+    int wd = inotify_add_watch(fd, filename_.c_str(),
                                IN_MODIFY | IN_CREATE);
     int i = 0;
     int length = read(fd, buffer, BUF_LEN);
@@ -54,12 +54,12 @@ void usps_api_server::Config::FileWatch() {
 
 // Reads the configuration file or creates one if not present.
 bool usps_api_server::Config::Initialize() {
-  std::ifstream file(filename, std::ifstream::binary);
+  std::ifstream file(filename_, std::ifstream::binary);
   if (!file.good()) {
-    std::cout << filename << " does not exist" << std::endl;
+    std::cout << filename_ << " does not exist" << std::endl;
     return false;
   }
-  std::cout << "Reading from " << filename << std::endl;
+  std::cout << "Reading from " << filename_ << std::endl;
   Json::Value root;
   Json::CharReaderBuilder builder;
   std::string errs;
@@ -68,7 +68,7 @@ bool usps_api_server::Config::Initialize() {
     Config::ParseConfig(root);
     return true;
   }
-  std::cout << "Invalid JSON in " << filename  << errs << std::endl;
+  std::cout << "Invalid JSON in " << filename_  << errs << std::endl;
   return false;
 }
 
@@ -76,25 +76,25 @@ bool usps_api_server::Config::Initialize() {
 // TODO(sam) Implement functionality & gmock tests for this function.
 void usps_api_server::Config::ParseConfig(Json::Value root) {
   const Json::Value address = root["address"];
-  host = address.get("host", "").asString();
-  port = address.get("port", 0).asInt();
+  host_ = address.get("host", "").asString();
+  port_ = address.get("port", 0).asInt();
 
   const Json::Value requests = root["requests"];
-  create = requests.get("create", true).asBool();
-  del = requests.get("delete", true).asBool();
-  query = requests.get("query", true).asBool();
+  create_ = requests.get("create", true).asBool();
+  del_ = requests.get("delete", true).asBool();
+  query_ = requests.get("query", true).asBool();
 
   const Json::Value sfcfilter = root["sfcfilter"];
-  ParseIdentifiers(&deny, sfcfilter["deny"]);
-  ParseIdentifiers(&allow, sfcfilter["allow"]);
-  ParseIdentifiers(&delay, sfcfilter["delay"]);
-  delay_time = sfcfilter["delay"].get("seconds", 0).asInt();
+  ParseIdentifiers(&deny_, sfcfilter["deny"]);
+  ParseIdentifiers(&allow_, sfcfilter["allow"]);
+  ParseIdentifiers(&delay_, sfcfilter["delay"]);
+  delay_time_ = sfcfilter["delay"].get("seconds", 0).asInt();
 
   const Json::Value ssl = root["ssl"];
-  enable_ssl = ssl.get("enable", false).asBool();
-  key = ssl.get("key", "").asString();
-  cert = ssl.get("cert", "").asString();
-  root = ssl.get("root", "").asString();
+  enable_ssl_ = ssl.get("enable", false).asBool();
+  key_ = ssl.get("key", "").asString();
+  cert_ = ssl.get("cert", "").asString();
+  root_ = ssl.get("root", "").asString();
 }
 
 // Parses the configuration file for TunnelIdentifiers and RoutingIdentifiers.

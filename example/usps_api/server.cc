@@ -30,28 +30,28 @@ grpc::Status usps_api_server::GhostImpl::CreateSfc(grpc::ServerContext* context,
                  const ghost::CreateSfcRequest* request,
                  ghost::CreateSfcResponse* response) {
   // If creating is disabled, deny request.
-  if (!(config->create)) {
+  if (!(config->create_)) {
     return grpc::Status::CANCELLED;
   }
   const ghost::SfcFilter sfc_filter = request->sfc_filter();
   // Delay list is active.
-  if (config->FilterActive(&(config->delay))) {
-    if (config->FilterMatch(&(config->delay), &sfc_filter)) {
-      int delay_time = config->delay_time * 1000;
+  if (config->FilterActive(&(config->delay_))) {
+    if (config->FilterMatch(&(config->delay_), &sfc_filter)) {
+      int delay_time = config->delay_time_ * 1000;
       // TODO(sam) use multithreading to avoid blocking main thread
       std::this_thread::sleep_for(std::chrono::milliseconds(delay_time));
       return grpc::Status::OK;
     }
   }
   // Deny list is active.
-  if (config->FilterActive(&(config->deny))) {
-    if (config->FilterMatch(&(config->deny), &sfc_filter)) {
+  if (config->FilterActive(&(config->deny_))) {
+    if (config->FilterMatch(&(config->deny_), &sfc_filter)) {
       return grpc::Status::CANCELLED;
     }
     return grpc::Status::OK;
-  } else if (config->FilterActive(&(config->allow))) {
+  } else if (config->FilterActive(&(config->allow_))) {
     // Allow list is active.
-    if (config->FilterMatch(&(config->allow), &sfc_filter)) {
+    if (config->FilterMatch(&(config->allow_), &sfc_filter)) {
       return grpc::Status::OK;
     }
     return grpc::Status::CANCELLED;
@@ -63,7 +63,7 @@ grpc::Status usps_api_server::GhostImpl::DeleteSfc(grpc::ServerContext* context,
                        const ghost::DeleteSfcRequest* request,
                        ghost::DeleteSfcResponse* response) {
   // If deleting is disabled, deny request.
-  if (!(config->del)) {
+  if (!(config->del_)) {
     return grpc::Status::CANCELLED;
   }
   return grpc::Status::OK;
@@ -72,7 +72,7 @@ grpc::Status usps_api_server::GhostImpl::Query(grpc::ServerContext* context,
                    const ghost::QueryRequest* request,
                    ghost::QueryResponse* response){
   // If querying is disabled, deny request.
-  if (!(config->query)) {
+  if (!(config->query_)) {
     return grpc::Status::CANCELLED;
   }
   return grpc::Status::OK;
