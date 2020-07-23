@@ -38,7 +38,7 @@ void usps_api_server::Config::FileWatch() {
   while(true) {
     char buffer[BUF_LEN];
     int fd = inotify_init();
-    int wd = inotify_add_watch(fd, "example/usps_api/config/config.json",
+    int wd = inotify_add_watch(fd, filename.c_str(),
                                IN_MODIFY | IN_CREATE);
     int i = 0;
     int length = read(fd, buffer, BUF_LEN);
@@ -54,25 +54,22 @@ void usps_api_server::Config::FileWatch() {
 
 // Reads the configuration file or creates one if not present.
 bool usps_api_server::Config::Initialize() {
-  const std::string filename = "example/usps_api/config/config.json";
   std::ifstream file(filename, std::ifstream::binary);
-  if (file.good()) {
-    std::cout << "Reading from " << filename << std::endl;
-    Json::Value root;
-    Json::CharReaderBuilder builder;
-    std::string errs;
-    bool valid_json = Json::parseFromStream(builder, file, &root, &errs);
-    if (valid_json) {
-      Config::ParseConfig(root);
-      return true;
-    } else {
-      std::cout << "Invalid JSON in " << filename  << errs << std::endl;
-      return false;
-    }
-  } else {
+  if (!file.good()) {
     std::cout << filename << " does not exist" << std::endl;
     return false;
   }
+  std::cout << "Reading from " << filename << std::endl;
+  Json::Value root;
+  Json::CharReaderBuilder builder;
+  std::string errs;
+  bool valid_json = Json::parseFromStream(builder, file, &root, &errs);
+  if (valid_json) {
+    Config::ParseConfig(root);
+    return true;
+  }
+  std::cout << "Invalid JSON in " << filename  << errs << std::endl;
+  return false;
 }
 
 // A helper function to parse the values in the configuration file.
@@ -146,14 +143,14 @@ bool usps_api_server::Config::FilterMatch(Filter* filter,
           return true;
         }
       }
-    }
-    if (ghost_filter.has_routing_id()) {
+    } else if (ghost_filter.has_routing_id()) {
       std::list<ghost::GhostRoutingIdentifier>::iterator it;
       std::list<ghost::GhostRoutingIdentifier> routings = filter->routings;
       // If instead we have a GhostRoutingIdentifier, check the routings list.
       for (it = routings.begin(); it != routings.end(); ++it) {
         ghost::GhostRoutingIdentifier filter_id = *it;
         bool matched = google::protobuf::util::MessageDifferencer::Equals(filter_id, ghost_filter.routing_id());
+        // If filter matches, return true
         if (matched) {
           return true;
         }

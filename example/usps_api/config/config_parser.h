@@ -27,6 +27,7 @@ class Config {
       std::list<ghost::GhostTunnelIdentifier> tunnels;
       std::list<ghost::GhostRoutingIdentifier> routings;
     };
+    const std::string filename = "example/usps_api/config/config.json";
     std::string host;
     std::uint16_t port;
     bool enable_ssl;
