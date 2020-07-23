@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
   absl::ParseCommandLine(argc, argv);
   usps_api_server::Config* config = new usps_api_server::Config();
   if(!(config->Initialize())) {
+    std::cout << "Configuration file failed to initialize" << std::endl;
     return 1;
   }
   config->MonitorConfig();
