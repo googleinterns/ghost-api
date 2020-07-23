@@ -38,7 +38,7 @@ void usps_api_server::Config::FileWatch() {
   while(true) {
     char buffer[BUF_LEN];
     int fd = inotify_init();
-    int wd = inotify_add_watch(fd, filename_.c_str(),
+    int wd = inotify_add_watch(fd, kFilename.c_str(),
                                IN_MODIFY | IN_CREATE);
     int i = 0;
     int length = read(fd, buffer, BUF_LEN);
@@ -54,12 +54,12 @@ void usps_api_server::Config::FileWatch() {
 
 // Reads the configuration file or creates one if not present.
 bool usps_api_server::Config::Initialize() {
-  std::ifstream file(filename_, std::ifstream::binary);
+  std::ifstream file(kFilename, std::ifstream::binary);
   if (!file.good()) {
-    std::cout << filename_ << " does not exist" << std::endl;
+    std::cout << kFilename << " does not exist" << std::endl;
     return false;
   }
-  std::cout << "Reading from " << filename_ << std::endl;
+  std::cout << "Reading from " << kFilename << std::endl;
   Json::Value root;
   Json::CharReaderBuilder builder;
   std::string errs;
@@ -68,7 +68,7 @@ bool usps_api_server::Config::Initialize() {
     Config::ParseConfig(root);
     return true;
   }
-  std::cout << "Invalid JSON in " << filename_  << errs << std::endl;
+  std::cout << "Invalid JSON in " << kFilename  << errs << std::endl;
   return false;
 }
 

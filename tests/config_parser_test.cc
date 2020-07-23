@@ -26,7 +26,7 @@
 namespace {
   // Helper function that writes to the configuration file.
   void WriteToConfig(usps_api_server::Config* config, Json::Value root) {
-    std::ofstream outfile(config->filename_);
+    std::ofstream outfile(config->kFilename);
     Json::StreamWriterBuilder builder;
     std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
     writer->write(root, &outfile);
@@ -35,9 +35,9 @@ namespace {
   // Helper function that creates a config instance.
   usps_api_server::Config* CreateConfig() {
     usps_api_server::Config *config = new usps_api_server::Config();
-    std::ifstream file(config->filename_, std::ifstream::binary);
+    std::ifstream file(config->kFilename, std::ifstream::binary);
     if(file.good()) {
-      std::remove((config->filename_).c_str());
+      std::remove((config->kFilename).c_str());
     }
     Json::Value root;
     WriteToConfig(config, root);
@@ -48,18 +48,18 @@ namespace {
 // Tests if config file does not exist
 TEST(ConfigTest, FileDoesNotExist) {
   usps_api_server::Config *config = CreateConfig();
-  std::remove((config->filename_).c_str());
+  std::remove((config->kFilename).c_str());
   EXPECT_FALSE(config->Initialize());
   delete config;
 }
 // Tests behavior of bad config file
 TEST(ConfigTest, MissingBrackets) {
   usps_api_server::Config *config = new usps_api_server::Config();
-  std::ifstream file(config->filename_, std::ifstream::binary);
+  std::ifstream file(config->kFilename, std::ifstream::binary);
   if(file.good()) {
-    std::remove((config->filename_).c_str());
+    std::remove((config->kFilename).c_str());
   }
-  std::ofstream outfile(config->filename_);
+  std::ofstream outfile(config->kFilename);
   outfile << "{";
   outfile.close();
   EXPECT_FALSE(config->Initialize());
