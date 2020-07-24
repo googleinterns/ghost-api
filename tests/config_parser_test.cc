@@ -14,36 +14,16 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include "config_helper.h"
 #include "example/usps_api/config/config_parser.h"
 #include "proto/usps_api/ghost_label.pb.h"
 #include <string>
-#include <fstream>
 #include <list>
-#include <iostream>
 #include <cstdio>
+#include <fstream>
+#include <iostream>
 #include "json/json.h"
-
-namespace {
-// Helper function that writes to the configuration file.
-void WriteToConfig(usps_api_server::Config* config, Json::Value root) {
-  std::ofstream outfile(config->kFilename);
-  Json::StreamWriterBuilder builder;
-  std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-  writer->write(root, &outfile);
-  outfile.close();
-}
-// Helper function that creates a config instance.
-usps_api_server::Config* CreateConfig() {
-  usps_api_server::Config *config = new usps_api_server::Config();
-  std::ifstream file(config->kFilename, std::ifstream::binary);
-  if(file.good()) {
-    std::remove((config->kFilename).c_str());
-  }
-  Json::Value root;
-  WriteToConfig(config, root);
-  return config;
-}
-} // namespace
+using namespace ConfigHelper;
 
 // Tests if config file does not exist
 TEST(ConfigTest, FileDoesNotExist) {

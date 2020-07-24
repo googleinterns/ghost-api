@@ -1,7 +1,18 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+cc_library(
+    name = "config-helper",
+    srcs = ["config_helper.cc"],
+    hdrs = ["config_helper.h"],
+    deps = [
+        "//example/usps_api/config:config-parser",
+        "@com_github_open_source_parsers_jsoncpp//:jsoncpp",
+        ],
+)
 cc_test(
     name = "tests",
     srcs = glob(["**/*.cc"]),
     deps = [
+        ":config-helper",
         "//example/usps_api:server-lib",
         "@googletest//:gtest_main",
         "@com_github_open_source_parsers_jsoncpp//:jsoncpp",
