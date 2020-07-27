@@ -11,33 +11,42 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations under
 // the License.
+#ifndef CONFIG_PARSER_H
+#define CONFIG_PARSER_H
+
 #include "proto/usps_api/sfc_filter.pb.h"
 #include "json/json.h"
 #include <string>
 #include <list>
 
+
 namespace usps_api_server {
-  class Config {
-    public:
-      struct Filter {
-        std::list<ghost::GhostTunnelIdentifier> tunnels;
-        std::list<ghost::GhostRoutingIdentifier> routings;
-      };
-      std::string host;
-      std::uint16_t port;
-      bool enable_ssl;
-      std::string key;
-      std::string cert;
-      std::string root;
-      bool create;
-      bool del;
-      bool query;
-      int delay_time;
-      Filter deny, allow, delay;
-      void ParseConfig(Json::Value root);
-      void Initialize();
-      void ParseIdentifiers(Filter* filter, Json::Value root);
-      bool FilterMatch(Filter* filter, ghost::SfcFilter sfc_filter);
-      bool FilterActive(Filter* filter);
-  };
+class Config {
+  public:
+    struct Filter {
+      std::list<ghost::GhostTunnelIdentifier> tunnels;
+      std::list<ghost::GhostRoutingIdentifier> routings;
+    };
+    const std::string kFilename = "example/usps_api/config/config.json";
+    std::string host_;
+    std::uint16_t port_;
+    bool enable_ssl_;
+    std::string key_;
+    std::string cert_;
+    std::string root_;
+    bool create_;
+    bool del_;
+    bool query_;
+    int delay_time_;
+    Filter deny_, allow_, delay_;
+    bool Initialize();
+    void MonitorConfig();
+    void FileWatch();
+    void ParseConfig(Json::Value root);
+    void ParseIdentifiers(Filter* filter, Json::Value root);
+    bool FilterMatch(Filter* filter, const ghost::SfcFilter* sfc_filter);
+    bool FilterActive(Filter* filter);
+};
 }
+
+#endif

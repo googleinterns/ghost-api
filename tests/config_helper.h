@@ -11,8 +11,11 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations under
 // the License.
-#include <string>
-
-namespace FileReader {
-std::string ReadString(std::string filename);
+#include "json/json.h"
+#include "example/usps_api/config/config_parser.h"
+namespace ConfigHelper {
+void WriteToConfig(usps_api_server::Config* config, Json::Value root);
+void CreateNewFile(usps_api_server::Config* config);
+usps_api_server::Config* CreateConfig();
+std::shared_ptr<usps_api_server::Config> CreateSharedConfig();
 }
