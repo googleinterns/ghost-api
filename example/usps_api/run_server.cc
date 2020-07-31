@@ -57,7 +57,6 @@ void Run(std::string host,
   std::string server_address = host + ":" + std::to_string(port);
   std::cout << "Server attempting to listen on " << server_address << std::endl;
   grpc::ServerBuilder builder;
-  usps_api_server::GhostImpl service(config);
   ghost::SfcService::AsyncService async_service;
   std::unique_ptr<grpc::ServerCompletionQueue> cq;
   std::shared_ptr<grpc::ServerCredentials> creds = GetCreds(config.get());
@@ -66,6 +65,7 @@ void Run(std::string host,
     builder.RegisterService(&async_service);
     cq = builder.AddCompletionQueue();
   } else {
+    usps_api_server::GhostImpl service(config);
     builder.RegisterService(&service);
   }
   std::unique_ptr<grpc::Server> server = builder.BuildAndStart();
