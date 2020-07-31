@@ -20,11 +20,23 @@ cc_library(
   ],
 )
 
+cc_library(
+  name = "async_server-lib",
+  srcs = ["async_server.cc"],
+  hdrs = ["async_server.h"],
+  deps = [
+      "//example/usps_api/config:config-parser",
+      "//proto:sfc_cc_grpc_proto",
+      "@com_github_grpc_grpc//:grpc++",
+  ],
+)
+
 cc_binary(
   name = "run-server",
   srcs = ["run_server.cc"],
   deps = [
       ":server-lib",
+      ":async_server-lib",
       ":file-reader",
       "@com_google_absl//absl/flags:flag",
       "@com_google_absl//absl/flags:parse",

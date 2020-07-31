@@ -95,6 +95,8 @@ void usps_api_server::Config::ParseConfig(Json::Value root) {
   key_ = ssl.get("key", "").asString();
   cert_ = ssl.get("cert", "").asString();
   root_ = ssl.get("root", "").asString();
+
+  async_ = root.get("async", false).asBool();
 }
 
 // Parses the configuration file for TunnelIdentifiers and RoutingIdentifiers.

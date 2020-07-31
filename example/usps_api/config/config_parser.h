@@ -38,6 +38,7 @@ class Config {
     bool del_;
     bool query_;
     int delay_time_;
+    bool async_;
     Filter deny_, allow_, delay_;
     bool Initialize();
     void MonitorConfig();
