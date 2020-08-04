@@ -20,7 +20,62 @@
 #include "proto/usps_api/sfc.grpc.pb.h"
 
 namespace usps_api_server {
+class Call {
+  public:
+   virtual void Proceed() = 0;
+   enum CallStatus { CREATE, PROCESS, FINISH };
+};
+
+class CreateSfc final : public Call {
+ public:
+   explicit CreateSfc(ghost::SfcService::AsyncService* service,
+                        grpc::ServerCompletionQueue* cq,
+                        std::shared_ptr<Config> config);
+   void Proceed();
+ private:
+   ghost::SfcService::AsyncService* service_;
+   grpc::ServerCompletionQueue* cq_;
+   grpc::ServerAsyncResponseWriter<ghost::CreateSfcResponse> responder_;
+   grpc::ServerContext ctx_;
+   CallStatus status_;
+   std::shared_ptr<Config> config_;
+   ghost::CreateSfcRequest request_;
+   ghost::CreateSfcResponse response_;
+};
+class DeleteSfc final : public Call {
+ public:
+  explicit DeleteSfc(ghost::SfcService::AsyncService* service,
+                     grpc::ServerCompletionQueue* cq,
+                     std::shared_ptr<Config> config);
+  void Proceed();
+ private:
+  ghost::SfcService::AsyncService* service_;
+  grpc::ServerCompletionQueue* cq_;
+  grpc::ServerContext ctx_;
+  grpc::ServerAsyncResponseWriter<ghost::DeleteSfcResponse> responder_;
+  CallStatus status_;
+  std::shared_ptr<Config> config_;
+  ghost::DeleteSfcRequest request_;
+  ghost::DeleteSfcResponse response_;
+};
+class Query final : public Call {
+ public:
+  explicit Query(ghost::SfcService::AsyncService* service,
+                     grpc::ServerCompletionQueue* cq,
+                     std::shared_ptr<Config> config);
+  void Proceed();
+ private:
+  ghost::SfcService::AsyncService* service_;
+  grpc::ServerCompletionQueue* cq_;
+  grpc::ServerContext ctx_;
+  grpc::ServerAsyncResponseWriter<ghost::QueryResponse> responder_;
+  CallStatus status_;
+  std::shared_ptr<Config> config_;
+  ghost::QueryRequest request_;
+  ghost::QueryResponse response_;
+};
+
 void HandleRpcs(ghost::SfcService::AsyncService& service,
                 grpc::ServerCompletionQueue* cq,
                 std::shared_ptr<Config> config);
-}
+} //namespace
