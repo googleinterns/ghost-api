@@ -12,7 +12,9 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 #include <string>
-
+#include <list>
+#include <vector>
 namespace FileReader {
 std::string ReadString(std::string filename);
+std::list<std::vector<std::string>> ParseCSV(std::string filename);
 }
