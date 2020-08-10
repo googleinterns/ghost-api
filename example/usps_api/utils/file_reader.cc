@@ -13,15 +13,40 @@
 // the License.
 #include "file_reader.h"
 #include <string>
+#include <list>
+#include <vector>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
-namespace FileReader {
-std::string ReadString(std::string filename) {
+// Reads a file as a string.
+std::string FileReader::ReadString(std::string filename) {
   std::ifstream file(filename);
   std::stringstream buffer;
   buffer << file.rdbuf();
   return buffer.str();
 }
-} // namespace
+// Parses a csv file for identifiers and returns them in a list.
+std::list<std::vector<std::string>> FileReader::ParseCSV(std::string filename) {
+  std::list<std::vector<std::string>> parsed_entries;
+  std::ifstream file(filename);
+  if (!file.good()) {
+    return parsed_entries;
+  }
+  std::string tmp;
+  char delim = ',';
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  while (std::getline(buffer, tmp, '\n')) {
+    std::stringstream line(tmp);
+    std::string entry;
+    std::vector<std::string> entries;
+    while (std::getline(line, entry, delim)) {
+      entries.push_back(entry);
+    }
+    parsed_entries.push_back(entries);
+  }
+  return parsed_entries;
+}
+
+

@@ -12,6 +12,7 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 #include "server.h"
+#include "async_server.h"
 #include "utils/file_reader.h"
 
 #include <string>
@@ -57,10 +58,20 @@ void Run(std::string host,
   std::cout << "Server attempting to listen on " << server_address << std::endl;
   grpc::ServerBuilder builder;
   usps_api_server::GhostImpl service(config);
+  ghost::SfcService::AsyncService async_service;
+  std::unique_ptr<grpc::ServerCompletionQueue> cq;
   std::shared_ptr<grpc::ServerCredentials> creds = GetCreds(config.get());
   builder.AddListeningPort(server_address, creds);
-  builder.RegisterService(&service);
+  if ((config.get())->async_) {
+    builder.RegisterService(&async_service);
+    cq = builder.AddCompletionQueue();
+  } else {
+    builder.RegisterService(&service);
+  }
   std::unique_ptr<grpc::Server> server = builder.BuildAndStart();
+  if ((config.get())->async_) {
+    usps_api_server::HandleRpcs(async_service, cq.get(), config);
+  }
   if (server == nullptr) {
     std::cout << "Server could not listen on " << server_address << std::endl;
     return;

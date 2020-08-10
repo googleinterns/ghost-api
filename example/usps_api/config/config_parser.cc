@@ -12,6 +12,7 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 #include "config_parser.h"
+#include "example/usps_api/utils/file_reader.h"
 #include "proto/usps_api/ghost_label.pb.h"
 #include "json/json.h"
 #include <iostream>
@@ -95,6 +96,8 @@ void usps_api_server::Config::ParseConfig(Json::Value root) {
   key_ = ssl.get("key", "").asString();
   cert_ = ssl.get("cert", "").asString();
   root_ = ssl.get("root", "").asString();
+
+  async_ = root.get("async", false).asBool();
 }
 
 // Parses the configuration file for TunnelIdentifiers and RoutingIdentifiers.
@@ -102,26 +105,86 @@ void usps_api_server::Config::ParseIdentifiers(Filter* filter,
                                                Json::Value root) {
   const Json::Value tunnels = root["ghost_tunnel_identifier"]["ghostlabel"];
   const Json::Value routings = root["ghost_routing_identifier"]["destination_label_prefix"];
+  std::string tunnel_file =
+      root["ghost_tunnel_identifier"].get("file", "").asString();
+  std::string route_file =
+      root["ghost_routing_identifier"].get("file", "").asString();
   filter->tunnels.clear();
   filter->routings.clear();
+  ParseTunnelFile(tunnel_file, filter);
+  ParseRouteFile(route_file, filter);
   // Adds given ghostlabel's in ghost_tunnel_identifier to filter's tunnel list.
   for (unsigned int index = 0; index < tunnels.size(); ++index) {
-    ghost::GhostTunnelIdentifier tunnel_id;
-    ghost::GhostLabel* terminal_label = tunnel_id.mutable_terminal_label();
-    ghost::GhostLabel* service_label = tunnel_id.mutable_service_label();
-    terminal_label->set_value(tunnels[index].get("terminal_label", 0).asInt());
-    service_label->set_value(tunnels[index].get("service_label", 0).asInt());
+    int terminal_label = tunnels[index].get("terminal_label", 0).asInt();
+    int service_label = tunnels[index].get("service_label", 0).asInt();
+    ghost::GhostTunnelIdentifier tunnel_id =
+        CreateGhostTunnel(terminal_label, service_label); 
     filter->tunnels.push_back(tunnel_id);
   }
   // Adds given destination_label_prefix's in ghost_routing_identifier to
   // filter's routing list.
   for (unsigned int index = 0; index < routings.size(); ++index) {
-    ghost::GhostRoutingIdentifier routing_id;
-    ghost::GhostLabelPrefix* dest_label = routing_id.mutable_destination_label_prefix();
-    dest_label->set_value(routings[index].get("value", 0).asInt());
-    dest_label->set_prefix_len(routings[index].get("prefix_len", 0).asInt());
+    int value = routings[index].get("value", 0).asInt();
+    int prefix_len = routings[index].get("prefix_len", 0).asInt();
+    ghost::GhostRoutingIdentifier routing_id =
+        CreateGhostRoute(value, prefix_len);
     filter->routings.push_back(routing_id);
   }
+}
+// Parses a csv file for TunnnelIdentifier and adds it to filter.
+void usps_api_server::Config::ParseTunnelFile(std::string filename,
+                                              Filter*& filter) {
+  if (filename.empty()) {
+    return;
+  }
+  std::list<std::vector<std::string>> entries = FileReader::ParseCSV(filename);
+  std::list<std::vector<std::string>>::iterator it;
+  for (it = entries.begin(); it != entries.end(); it++) {
+    std::vector<std::string> entry = *it;
+    if (entry.size() < 2) {
+      continue;
+    }
+    ghost::GhostTunnelIdentifier tunnel_id =
+        CreateGhostTunnel(std::stoi(entry[0]), std::stoi(entry[1]));
+    filter->tunnels.push_back(tunnel_id);
+  }
+}
+// Parses a csv file for RoutingIdentifier and adds it to filter.
+void usps_api_server::Config::ParseRouteFile(std::string filename,
+                                     Filter*& filter) {
+  if (filename.empty()) {
+    return;
+  }
+  std::list<std::vector<std::string>> entries = FileReader::ParseCSV(filename);
+  std::list<std::vector<std::string>>::iterator it;
+  for (it = entries.begin(); it != entries.end(); it++) {
+    std::vector<std::string> entry = *it;
+    if (entry.size() < 2) {
+      continue;
+    }
+    ghost::GhostRoutingIdentifier routing_id =
+        CreateGhostRoute(std::stoi(entry[0]), std::stoi(entry[1]));
+    filter->routings.push_back(routing_id);
+  }
+}
+// Creates a GhostTunnelIdentifier from terminal_label and service_label.
+ghost::GhostTunnelIdentifier usps_api_server::Config::CreateGhostTunnel(int term,
+                                                                        int service) {
+    ghost::GhostTunnelIdentifier tunnel_id;
+    ghost::GhostLabel* terminal_label = tunnel_id.mutable_terminal_label();
+    ghost::GhostLabel* service_label = tunnel_id.mutable_service_label();
+    terminal_label->set_value(term);
+    service_label->set_value(service);
+    return tunnel_id;
+}
+// Creates a GhostRoutingIdentifier from value and prefix_len.
+ghost::GhostRoutingIdentifier usps_api_server::Config::CreateGhostRoute(int value,
+                                                                        int prefix_len) {
+  ghost::GhostRoutingIdentifier routing_id;
+  ghost::GhostLabelPrefix* dest_label = routing_id.mutable_destination_label_prefix();
+  dest_label->set_value(value);
+  dest_label->set_prefix_len(prefix_len);
+  return routing_id;
 }
 // Will return true if the exact same filters in 'sfc_filter' are in 'filter'
 bool usps_api_server::Config::FilterMatch(Filter* filter,

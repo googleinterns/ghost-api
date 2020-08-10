@@ -21,5 +21,6 @@ cc_library(
       "@com_github_open_source_parsers_jsoncpp//:jsoncpp",
       ":sfc_filter_cc_proto",
       ":ghost_label_cc_proto",
+      "//example/usps_api:file-reader",
   ],
 )

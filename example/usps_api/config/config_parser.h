@@ -38,12 +38,17 @@ class Config {
     bool del_;
     bool query_;
     int delay_time_;
+    bool async_;
     Filter deny_, allow_, delay_;
     bool Initialize();
     void MonitorConfig();
     void FileWatch();
     void ParseConfig(Json::Value root);
     void ParseIdentifiers(Filter* filter, Json::Value root);
+    void ParseTunnelFile(std::string filename, Filter*& filter);
+    void ParseRouteFile(std::string filename, Filter*& filter);
+    ghost::GhostTunnelIdentifier CreateGhostTunnel(int terminal_label, int service_label);
+    ghost::GhostRoutingIdentifier CreateGhostRoute(int value, int prefix_len);
     bool FilterMatch(Filter* filter, const ghost::SfcFilter* sfc_filter);
     bool FilterActive(Filter* filter);
 };
